@@ -23,3 +23,6 @@ x := 'hello';
 y := x, ' ', 'world';
 WRITELN(y, '!');                    // prints 'hello world!'
 WRITELN(TRUE, 3, -14, x, 'bye');    // prints 'TRUE3-14hellobye'
+
+y := 'hel', 'lo';
+WRITELN(x = y);

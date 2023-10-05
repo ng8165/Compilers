@@ -333,12 +333,12 @@ public class Parser
         if (currentToken.equals("="))
         {
             eat(currentToken);
-            return expr == parseSimpleExpression();
+            return expr.equals(parseSimpleExpression());
         }
         else if (currentToken.equals("<>"))
         {
             eat(currentToken);
-            return expr != parseSimpleExpression();
+            return !expr.equals(parseSimpleExpression());
         }
         else if (currentToken.equals("<"))
         {
