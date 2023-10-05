@@ -1,0 +1,25 @@
+WRITELN(1); (*
+WRITELN(2);    should only print 1 and 4
+WRITELN(3); *)
+WRITELN(4);
+
+WRITELN(9 mod 4);           // prints 1
+
+READLN(x);
+WRITELN(x);
+
+x := TRUE;                  // x is TRUE
+y := 2 >= 3;                // y is FALSE
+x := 1 = 2;                 // x is FALSE
+y := 1 <> 2;                // y is TRUE
+x := NOT x;                 // x is TRUE
+x := x AND (FALSE OR y);    // x is TRUE
+WRITELN(1 = 2);             // prints FALSE
+
+WRITELN((-3 <= 2));         // prints TRUE
+WRITELN(0+1);               // prints 1
+
+x := 'hello';
+y := x, ' ', 'world';
+WRITELN(y, '!');                    // prints 'hello world!'
+WRITELN(TRUE, 3, -14, x, 'bye');    // prints 'TRUE3-14hellobye'

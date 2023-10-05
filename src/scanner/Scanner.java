@@ -1,4 +1,5 @@
 package scanner;
+
 import java.io.*;
 
 /**
@@ -10,6 +11,7 @@ import java.io.*;
 public class Scanner
 {
     private final BufferedReader in;
+    private final BufferedReader userIn;
     private char currentChar;
     private boolean eof;
 
@@ -21,6 +23,7 @@ public class Scanner
     public Scanner(InputStream inStream)
     {
         in = new BufferedReader(new InputStreamReader(inStream));
+        userIn = new BufferedReader(new InputStreamReader(System.in));
         eof = false;
         getNextChar();
     }
@@ -33,6 +36,7 @@ public class Scanner
     public Scanner(String inString)
     {
         in = new BufferedReader(new StringReader(inString));
+        userIn = new BufferedReader(new InputStreamReader(System.in));
         eof = false;
         getNextChar();
     }
@@ -136,13 +140,13 @@ public class Scanner
 
     /**
      * Determines if the character is a separator (parentheses, square brackets,
-     * braces, semicolon, comma).
+     * braces, semicolon, comma, single quotes).
      * @param input the input character to be tested
      * @return true if the input is a separator; false if not
      */
     private static boolean isSeparator(char input)
     {
-        return "()[]{};,".contains("" + input);
+        return "()[]{};,'".contains("" + input);
     }
 
     /**
@@ -189,8 +193,7 @@ public class Scanner
     }
 
     /**
-     * Scans currentChar as an operand. The method also handles comments,
-     * because both comment types (single-line and multi-line) start with a forward slash.
+     * Scans currentChar as an operand. The method also handles single line comments.
      * Also handles operand that are two characters long (:=, <=, >=, <>, <<, >>).
      * @return the operand as a Token; if a comment, returns nextToken after the end of the comment
      * @precondition currentChar must be an operand (see isOperand for more details)
@@ -203,11 +206,9 @@ public class Scanner
         String operand = "" + currentChar;
         eat(currentChar);
 
-        // handle comments (single-line and multi-line)
+        // handle single line comments
         if (operand.equals("/") && currentChar == '/')
             return scanSingleComment();
-        else if (operand.equals("/") && currentChar == '*')
-            return scanMultiComment();
 
         // handle operands with two characters
         if ((":<>".contains(operand) && currentChar == '=') || // :=, <=, >=
@@ -222,7 +223,7 @@ public class Scanner
     }
 
     /**
-     * Scans currentChar as a separator.
+     * Scans currentChar as a separator. The method also handles multi-line comments.
      * @return the separator as a Token
      * @precondition currentChar must be a separator (see isSeparator for details)
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
@@ -231,9 +232,29 @@ public class Scanner
      */
     private Token scanSeparator() throws ScanErrorException
     {
-        Token token =  new Token("" + currentChar, Token.Type.SEPARATOR);
+        StringBuilder operand = new StringBuilder();
+        operand.append(currentChar);
         eat(currentChar);
-        return token;
+
+        if (operand.toString().equals("(") && currentChar == '*')
+            return scanMultiComment();
+
+        if (operand.toString().equals("'"))
+        {
+            operand.deleteCharAt(0); // delete the starting single quote
+
+            while (currentChar != '\'')
+            {
+                operand.append(currentChar);
+                eat(currentChar);
+            }
+
+            eat(currentChar); // eat the ending single quote
+
+            return new Token(operand.toString(), Token.Type.STRING);
+        }
+
+        return new Token(operand.toString(), Token.Type.SEPARATOR);
     }
 
     /**
@@ -254,26 +275,26 @@ public class Scanner
     }
 
     /**
-     * The scanMultiComment method eats characters until it finds the end multiline symbol.
-     * (I can't put it here because the documentation will break if I do.)
+     * The scanMultiComment method eats characters until it finds the end multiline symbol *).
+     * Supports nested multi-line comments.
      * @return returns the text token after the comment ends
-     * @precondition /* must be present before this method is called
+     * @precondition (* must be present before this method is called
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
      * @throws ScanErrorException from the eat function when the expected character
      *                            and currentChar are different
      */
     private Token scanMultiComment() throws ScanErrorException
     {
-        eat(currentChar); // eat the * in /*
+        eat(currentChar); // eat the * in (*
         char lastChar;
 
         do
         {
             lastChar = currentChar;
             eat(currentChar);
-        } while (!(lastChar == '*' && currentChar == '/') && hasNext());
+        } while (!(lastChar == '*' && currentChar == ')') && hasNext());
 
-        eat(currentChar); // eat the last / in */
+        eat(currentChar); // eat the last / in *)
 
         return nextToken();
     }
@@ -291,7 +312,7 @@ public class Scanner
             eat(currentChar);
 
         if (!hasNext())
-            return new Token("END", Token.Type.EOF);
+            return new Token("EOF", Token.Type.EOF);
 
         if (isDigit(currentChar))
             return scanNumber();
@@ -307,5 +328,15 @@ public class Scanner
             eat(currentChar); // move on
             throw new ScanErrorException(error);
         }
+    }
+
+    /**
+     * Reads an integer from user input and returns it.
+     * @return integer from user input
+     * @throws IOException when there is an error with reading user input
+     */
+    public int readUserInt() throws IOException
+    {
+        return Integer.parseInt(userIn.readLine());
     }
 }

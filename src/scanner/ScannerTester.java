@@ -18,8 +18,8 @@ public class ScannerTester
      */
     public static void main(String[] args) throws FileNotFoundException
     {
-        String name = "./ScannerTest.txt";
-        // String name = "./scannerTestAdvanced.txt";
+        String name = "./src/scanner/ScannerTest.txt";
+        // String name = "./src/scanner/scannerTestAdvanced.txt";
         Scanner sc = new Scanner(new FileInputStream(name));
 
         while (sc.hasNext())
