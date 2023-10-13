@@ -11,7 +11,6 @@ import java.io.*;
 public class Scanner
 {
     private final BufferedReader in;
-    private final BufferedReader userIn;
     private char currentChar;
     private boolean eof;
 
@@ -23,7 +22,6 @@ public class Scanner
     public Scanner(InputStream inStream)
     {
         in = new BufferedReader(new InputStreamReader(inStream));
-        userIn = new BufferedReader(new InputStreamReader(System.in));
         eof = false;
         getNextChar();
     }
@@ -36,7 +34,6 @@ public class Scanner
     public Scanner(String inString)
     {
         in = new BufferedReader(new StringReader(inString));
-        userIn = new BufferedReader(new InputStreamReader(System.in));
         eof = false;
         getNextChar();
     }
@@ -328,15 +325,5 @@ public class Scanner
             eat(currentChar); // move on
             throw new ScanErrorException(error);
         }
-    }
-
-    /**
-     * Reads an integer from user input and returns it.
-     * @return integer from user input
-     * @throws IOException when there is an error with reading user input
-     */
-    public int readUserInt() throws IOException
-    {
-        return Integer.parseInt(userIn.readLine());
     }
 }

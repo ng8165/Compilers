@@ -12,7 +12,7 @@ public class Token
 {
     /**
      * The KEYWORDS Set contains all Pascal keywords. This list was scraped off of
-     * https://wiki.freepascal.org/Reserved_words. I added "WRITELN" to the list.
+     * https://wiki.freepascal.org/Reserved_words.
      */
     private static final HashSet<String> KEYWORDS = new HashSet<>(Arrays.asList("AND", "ARRAY",
             "ASM", "BEGIN", "BREAK", "CASE", "CONST", "CONSTRUCTOR", "CONTINUE", "DESTRUCTOR",
@@ -20,7 +20,10 @@ public class Token
             "IMPLEMENTATION", "IN", "INLINE", "INTERFACE", "LABEL", "MOD", "NIL", "NOT", "OBJECT",
             "OF", "ON", "OPERATOR", "OR", "PACKED", "PROCEDURE", "PROGRAM", "RECORD", "REPEAT",
             "SET", "SHL", "SHR", "STRING", "THEN", "TO", "TRUE", "TYPE", "UNIT", "UNTIL", "USES",
-            "VAR", "WHILE", "WITH", "WRITELN", "XOR"));
+            "VAR", "WHILE", "WITH", "XOR"));
+
+    private static final HashSet<String> RELOPS = new HashSet<>(Arrays.asList(
+            "=", "<>", "<", ">", "<=", ">="));
 
     public enum Type
     {
@@ -55,6 +58,10 @@ public class Token
          * The STRING type denotes a string in Pascal.
          */
         STRING,
+        /**
+         * The RELOPS type represent =, <>, <, >, <=, and >=.
+         */
+        RELOPS,
     }
 
     private final String content;
@@ -68,7 +75,12 @@ public class Token
     public Token(String content, Type type)
     {
         this.content = content;
-        this.type = KEYWORDS.contains(content) ? Type.KEYWORD : type;
+        if (KEYWORDS.contains(content))
+            this.type = Type.KEYWORD;
+        else if (RELOPS.contains(content))
+            this.type = Type.RELOPS;
+        else
+            this.type = type;
     }
 
     /**

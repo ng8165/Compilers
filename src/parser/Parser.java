@@ -1,22 +1,23 @@
 package parser;
 
 import scanner.*;
+import ast.*;
+import ast.Number; // remove ambiguity with java.lang.Number
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Parser class executes Parser-like statements as it parses them.
- * It uses the Scanner to scan tokens and uses the Pascal grammar to execute it.
+ * It uses the Scanner to scan tokens and uses the Pascal grammar to generate a parse tree.
  * @author Nelson Gou
- * @version 10/4/23
+ * @version 10/17/23
  */
 public class Parser
 {
     private final Scanner sc;
     private Token currentToken;
-    private final Map<String, Object> identifiers;
 
     /**
      * This constructor takes a Scanner. It also loads the first token into currentToken and
@@ -28,7 +29,15 @@ public class Parser
     {
         this.sc = sc;
         currentToken = sc.nextToken();
-        identifiers = new HashMap<>();
+    }
+
+    /**
+     * Returns true if there is another statement and false if not.
+     * @return true if there is another statement; otherwise false.
+     */
+    public boolean hasNext()
+    {
+        return sc.hasNext();
     }
 
     /**
@@ -60,175 +69,180 @@ public class Parser
     }
 
     /**
-     * Returns a String representation of variables in the identifiers symbol table.
-     * Primarily used to print Booleans as TRUE and FALSE instead of true and false.
-     * @param var the variable
-     * @return the String representation of var
-     */
-    private String variableToStr(Object var)
-    {
-        if (var instanceof Boolean bool)
-            // print TRUE and FALSE instead of true and false
-            return (bool ? "TRUE" : "FALSE");
-        else
-            return var.toString();
-    }
-
-    /**
-     * The parseNumber function parses currentToken and returns it in an Integer representation.
+     * The parseNumber function parses a number.
      * @precondition currentToken's Type should be NUMBER
-     * @return Integer representation of currentToken
+     * @return a parsed Number which contains the integer
      * @throws ScanErrorException if there is an error in scanning
      */
-    private Integer parseNumber() throws ScanErrorException
+    private Number parseNumber() throws ScanErrorException
     {
-        int num = Integer.parseInt(currentToken.getContent());
+        Number num = new Number(Integer.parseInt(currentToken.getContent()));
         eat(currentToken);
         return num;
     }
 
     /**
      * The parseStatement function parses a statement. Valid statements include:
-     *   - WRITELN(exprList);
-     *   - BEGIN stmts END;
-     *   - id := exprList;
+     *   - WRITELN(cond);
      *   - READLN(id);
-     * NOTE: An exprList is a comma-separated list of expressions that is concatenated as Strings.
-     * @return true if a statement has been parsed;
-     *         false if no statement was parsed (acts like hasNext)
+     *   - BEGIN stmts END;
+     *   - id := cond;
+     *   - IF cond THEN stmt
+     *   - IF cond THEN stmt ELSE stmt
+     *   - WHILE cond DO stmt
+     *   - FOR var := exp TO exp DO stmt
+     * @return a parsed Statement (Writeln, Block, or Assignment) that represents the tokens
      * @throws ScanErrorException if there is an error in scanning
      * @throws IOException if there is an error in reading user input
      */
-    public boolean parseStatement() throws ScanErrorException, IOException
+    public Statement parseStatement() throws ScanErrorException, IOException
     {
         if (currentToken.equals("WRITELN"))
         {
-            eat(currentToken);
+            eat(currentToken); // eat "WRITELN" token
             eat("(", Token.Type.SEPARATOR);
-
-            System.out.print(variableToStr(parseExpression()));
-            while (currentToken.equals(","))
-            {
-                eat(currentToken); // eat the comma
-                System.out.print(variableToStr(parseExpression()));
-            }
-            System.out.println(); // print new line
-
+            Expression exp = parseCondition();
             eat(")", Token.Type.SEPARATOR);
             eat(";", Token.Type.SEPARATOR);
-        }
-        else if (currentToken.equals("BEGIN"))
-        {
-            eat(currentToken);
-            boolean cont = true;
-
-            while (cont)
-            {
-                if (currentToken.equals("END"))
-                {
-                    eat(currentToken);
-                    eat(";", Token.Type.SEPARATOR);
-                    cont = false;
-                }
-                else
-                    cont = parseStatement();
-            }
+            return new Writeln(exp);
         }
         else if (currentToken.equals("READLN"))
         {
-            eat(currentToken);
+            eat(currentToken); // eat "READLN" token
             eat("(", Token.Type.SEPARATOR);
-            String id = currentToken.getContent();
+
+            String var = currentToken.getContent();
+            if (currentToken.getType() != Token.Type.IDENTIFIER)
+                throw new ScanErrorException(var + " is not a valid identifier");
             eat(currentToken);
+
             eat(")", Token.Type.SEPARATOR);
             eat(";", Token.Type.SEPARATOR);
-            identifiers.put(id, sc.readUserInt());
+
+            return new Readln(var);
+        }
+        else if (currentToken.equals("BEGIN"))
+        {
+            eat(currentToken); // eat "BEGIN" token
+            List<Statement> stmts = new ArrayList<>();
+
+            while (!currentToken.equals("END"))
+                stmts.add(parseStatement());
+
+            eat(currentToken); // eat "END" token
+            eat(";", Token.Type.SEPARATOR);
+
+            return new Block(stmts);
+        }
+        else if (currentToken.equals("IF"))
+        {
+            eat(currentToken); // eat "IF"
+            Condition cond = (Condition) parseCondition();
+            eat("THEN", Token.Type.KEYWORD);
+            Statement thenStmt = parseStatement();
+
+            if (currentToken.equals("ELSE"))
+            {
+                eat(currentToken); // eat "ELSE"
+                return new If(cond, thenStmt, parseStatement());
+            }
+            return new If(cond, thenStmt);
+        }
+        else if (currentToken.equals("WHILE"))
+        {
+            eat(currentToken); // eat "WHILE"
+            Condition cond = (Condition) parseCondition();
+            eat("DO", Token.Type.KEYWORD);
+            return new While(cond, parseStatement());
+        }
+        else if (currentToken.equals("FOR"))
+        {
+            eat(currentToken); // eat "FOR"
+
+            String var = currentToken.getContent();
+            if (currentToken.getType() != Token.Type.IDENTIFIER)
+                throw new ScanErrorException(var + " is not a valid identifier");
+            eat(currentToken);
+
+            eat(":=", Token.Type.OPERAND);
+            Expression start = parseExpression();
+            eat("TO", Token.Type.KEYWORD);
+            Expression end = parseExpression();
+            eat("DO", Token.Type.KEYWORD);
+
+            return new For(var, start, end, parseStatement());
         }
         else if (currentToken.getType() == Token.Type.IDENTIFIER)
         {
-            String id = currentToken.getContent();
-            eat(currentToken); // eat the identifier
+            String var = currentToken.getContent();
+            eat(currentToken); // eat the variable name
             eat(":=", Token.Type.OPERAND);
-
-            Object expr = parseExpression();
-            if (!currentToken.equals(","))
-                identifiers.put(id, expr);
-            else
-            {
-                StringBuilder str = new StringBuilder(variableToStr(expr));
-
-                while (currentToken.equals(",")) {
-                    eat(currentToken); // eat the comma
-                    str.append(variableToStr(parseExpression()));
-                }
-
-                identifiers.put(id, str.toString());
-            }
-
+            Expression exp = parseCondition();
             eat(";", Token.Type.SEPARATOR);
+            return new Assignment(var, exp);
         }
-        else
-            return false;
 
-        return true;
+        throw new ScanErrorException(currentToken.getContent() +
+                " did not match a valid statement");
     }
 
     /**
      * The parseFactor function parses a factor. Valid factors include:
-     *   - (expr)
+     *   - (cond)
      *   - -factor
-     *   - a number (parsed by parseNumber)
+     *   - NOT cond
+     *   - an integer (parsed by parseNumber)
+     *   - TRUE and FALSE
      *   - an identifier (looked up in the identifiers HashMap)
-     *   - a boolean (TRUE or FALSE)
-     *   - a string
-     *   - NOT expr
-     * @return the numerical value of the factor
+     *   - a String
+     * @return a parsed Expression which represents the factor
      * @throws ScanErrorException if there is an error in scanning
      */
-    private Object parseFactor() throws ScanErrorException
+    private Expression parseFactor() throws ScanErrorException
     {
-        Object ret = null;
-
         if (currentToken.equals("("))
         {
             eat(currentToken);
-            ret = parseExpression();
+            Expression exp = parseCondition();
             eat(")", Token.Type.SEPARATOR);
+            return exp;
         }
         else if (currentToken.equals("-"))
         {
             eat(currentToken);
-            ret = -(Integer) parseFactor();
-        }
-        else if (currentToken.equals("NOT"))
-        {
-            eat(currentToken);
-            ret = !((Boolean) parseExpression());
+            return new UnOp("-", parseFactor());
         }
         else if (currentToken.equals("TRUE"))
         {
             eat(currentToken);
-            ret = Boolean.TRUE;
+            return new Bool(true);
         }
         else if (currentToken.equals("FALSE"))
         {
             eat(currentToken);
-            ret = Boolean.FALSE;
+            return new Bool(false);
         }
-        else if (identifiers.containsKey(currentToken.getContent()))
+        else if (currentToken.equals("NOT"))
         {
-            ret = identifiers.get(currentToken.getContent());
             eat(currentToken);
+            return new UnOp("NOT", parseCondition());
         }
-        else if (currentToken.getType() == Token.Type.NUMBER)
-            ret = parseNumber();
         else if (currentToken.getType() == Token.Type.STRING)
         {
-            ret = currentToken.getContent();
+            String str = currentToken.getContent();
             eat(currentToken);
+            return new Str(str);
         }
+        else if (currentToken.getType() == Token.Type.IDENTIFIER)
+        {
+            Variable var = new Variable(currentToken.getContent());
+            eat(currentToken);
+            return var;
+        }
+        else if (currentToken.getType() == Token.Type.NUMBER)
+            return parseNumber();
 
-        return ret;
+        throw new ScanErrorException(currentToken.getContent() + " did not match a valid factor");
     }
 
     /**
@@ -238,35 +252,35 @@ public class Parser
      *   - term mod factor
      *   - term AND factor
      *   - factor
-     * @return the numerical value of the term
+     * @return a parsed Expression which represents the term
      * @throws ScanErrorException if there is an error in scanning
      */
-    private Object parseTerm() throws ScanErrorException
+    private Expression parseTerm() throws ScanErrorException
     {
         boolean cont = true;
-        Object factor = parseFactor();
+        Expression factor = parseFactor();
 
         while (cont)
         {
             if (currentToken.equals("*"))
             {
-                eat(currentToken);
-                factor = (Integer) factor * (Integer) parseFactor();
+                eat(currentToken); // eat "*" token
+                factor = new BinOp("*", factor, parseFactor());
             }
             else if (currentToken.equals("/"))
             {
-                eat(currentToken);
-                factor = (Integer) factor / (Integer) parseFactor();
+                eat(currentToken); // eat "/" token
+                factor = new BinOp("/", factor, parseFactor());
             }
             else if (currentToken.equals("mod"))
             {
-                eat(currentToken);
-                factor = (Integer) factor % (Integer) parseFactor();
+                eat(currentToken); // eat "mod" token
+                factor = new BinOp("mod", factor, parseFactor());
             }
             else if (currentToken.equals("AND"))
             {
-                eat(currentToken);
-                factor = (Boolean) factor && (Boolean) parseFactor();
+                eat(currentToken); // eat "AND" token
+                factor = new BinOp("AND", factor, parseFactor());
             }
             else
                 cont = false;
@@ -276,36 +290,36 @@ public class Parser
     }
 
     /**
-     * The parseSimpleExpression function parses a simple expression.
-     * Valid simple expressions include:
-     *   - simpleExpr + term
-     *   - simpleExpr - term
-     *   - simpleExpr OR term
+     * The parseExpression function parses an expression.
+     * Valid expressions include:
+     *   - expr + term
+     *   - expr - term
+     *   - expr OR term
      *   - term
-     * @return the numerical value of the simple expression
+     * @return a parsed Expression which represents the expression
      * @throws ScanErrorException if there is an error in scanning
      */
-    private Object parseSimpleExpression() throws ScanErrorException
+    private Expression parseExpression() throws ScanErrorException
     {
-        Object term = parseTerm();
         boolean cont = true;
+        Expression term = parseTerm();
 
         while (cont)
         {
             if (currentToken.equals("+"))
             {
-                eat(currentToken);
-                term = (Integer) term + (Integer) parseTerm();
+                eat(currentToken); // eat "+" token
+                term = new BinOp("+", term, parseTerm());
             }
             else if (currentToken.equals("-"))
             {
-                eat(currentToken);
-                term = (Integer) term - (Integer) parseTerm();
+                eat(currentToken); // eat "-" token
+                term = new BinOp("-", term, parseTerm());
             }
             else if (currentToken.equals("OR"))
             {
-                eat(currentToken);
-                term = (Boolean) term || (Boolean) parseTerm();
+                eat(currentToken); // eat "OR" token
+                term = new BinOp("OR", term, parseTerm());
             }
             else
                 cont = false;
@@ -315,52 +329,27 @@ public class Parser
     }
 
     /**
-     * The parseExpression function parses an expression. Valid expressions include:
-     *   - simpleExpr = simpleExpr
-     *   - simpleExpr <> simpleExpr
-     *   - simpleExpr < simpleExpr
-     *   - simpleExpr <= simpleExpr
-     *   - simpleExpr > simpleExpr
-     *   - simpleExpr >= simpleExpr
-     *   - simpleExpr
-     * @return 0 if the boolean expression is false; 1 if it is true
+     * The parseCondition function parses a condition. Valid conditions include:
+     *   - expr = expr
+     *   - expr <> expr
+     *   - expr < expr
+     *   - expr > expr
+     *   - expr <= expr
+     *   - expr >= expr
+     *   - expr
+     * @return a parsed Expression which represents the condition
      * @throws ScanErrorException if there is an error in scanning
      */
-    private Object parseExpression() throws ScanErrorException
+    private Expression parseCondition() throws ScanErrorException
     {
-        Object expr = parseSimpleExpression();
+        Expression exp1 = parseExpression();
+        if (currentToken.getType() != Token.Type.RELOPS)
+            return exp1;
 
-        if (currentToken.equals("="))
-        {
-            eat(currentToken);
-            return expr.equals(parseSimpleExpression());
-        }
-        else if (currentToken.equals("<>"))
-        {
-            eat(currentToken);
-            return !expr.equals(parseSimpleExpression());
-        }
-        else if (currentToken.equals("<"))
-        {
-            eat(currentToken);
-            return (Integer) expr < (Integer) parseSimpleExpression();
-        }
-        else if (currentToken.equals("<="))
-        {
-            eat(currentToken);
-            return (Integer) expr <= (Integer) parseSimpleExpression();
-        }
-        else if (currentToken.equals(">"))
-        {
-            eat(currentToken);
-            return (Integer) expr > (Integer) parseSimpleExpression();
-        }
-        else if (currentToken.equals(">="))
-        {
-            eat(currentToken);
-            return (Integer) expr >= (Integer) parseSimpleExpression();
-        }
-        else
-            return expr;
+        String relop = currentToken.getContent();
+        eat(currentToken); // eat the relop
+        Expression exp2 = parseExpression();
+
+        return new Condition(exp1, relop, exp2);
     }
 }
