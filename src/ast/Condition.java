@@ -34,17 +34,25 @@ public class Condition extends Expression
     @Override
     public Object eval(Environment env)
     {
-        if (relop.equals("="))
-            return exp1.eval(env).equals(exp2.eval(env));
-        else if (relop.equals("<>"))
-            return !exp1.eval(env).equals(exp2.eval(env));
-        else if (relop.equals("<"))
-            return (Integer) exp1.eval(env) < (Integer) exp2.eval(env);
-        else if (relop.equals(">"))
-            return (Integer) exp1.eval(env) > (Integer) exp2.eval(env);
-        else if (relop.equals("<="))
-            return (Integer) exp1.eval(env) <= (Integer) exp2.eval(env);
-        else
-            return (Integer) exp1.eval(env) >= (Integer) exp2.eval(env);
+        try
+        {
+            if (relop.equals("="))
+                return exp1.eval(env).equals(exp2.eval(env));
+            else if (relop.equals("<>"))
+                return !exp1.eval(env).equals(exp2.eval(env));
+            else if (relop.equals("<"))
+                return (Integer) exp1.eval(env) < (Integer) exp2.eval(env);
+            else if (relop.equals(">"))
+                return (Integer) exp1.eval(env) > (Integer) exp2.eval(env);
+            else if (relop.equals("<="))
+                return (Integer) exp1.eval(env) <= (Integer) exp2.eval(env);
+            else
+                return (Integer) exp1.eval(env) >= (Integer) exp2.eval(env);
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException("Could not evaluate the expression " +
+                    exp1.eval(env) + " " + relop + " " + exp2.eval(env));
+        }
     }
 }
