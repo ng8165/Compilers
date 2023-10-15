@@ -41,25 +41,30 @@ public class BinOp extends Expression
     {
         try
         {
-            if (op.equals("+"))
-                return (Integer) exp1.eval(env) + (Integer) exp2.eval(env);
-            else if (op.equals("-"))
-                return (Integer) exp1.eval(env) - (Integer) exp2.eval(env);
-            else if (op.equals("*"))
-                return (Integer) exp1.eval(env) * (Integer) exp2.eval(env);
-            else if (op.equals("/"))
-                return (Integer) exp1.eval(env) / (Integer) exp2.eval(env);
-            else if (op.equals("mod"))
-                return (Integer) exp1.eval(env) % (Integer) exp2.eval(env);
-            else if (op.equals("AND"))
-                return (Boolean) exp1.eval(env) && (Boolean) exp2.eval(env);
-            else
-                return (Boolean) exp1.eval(env) || (Boolean) exp2.eval(env);
+            return switch (op)
+            {
+                case "+" -> (Integer) exp1.eval(env) + (Integer) exp2.eval(env);
+                case "-" -> (Integer) exp1.eval(env) - (Integer) exp2.eval(env);
+                case "*" -> (Integer) exp1.eval(env) * (Integer) exp2.eval(env);
+                case "/" -> (Integer) exp1.eval(env) / (Integer) exp2.eval(env);
+                case "mod" -> (Integer) exp1.eval(env) % (Integer) exp2.eval(env);
+                case "AND" -> (Boolean) exp1.eval(env) && (Boolean) exp2.eval(env);
+                default -> (Boolean) exp1.eval(env) || (Boolean) exp2.eval(env);
+            };
         }
         catch (ClassCastException e)
         {
-            throw new IllegalArgumentException("Could not evaluate the expression " +
-                    exp1.eval(env) + " " + op + " " + exp2.eval(env));
+            throw new IllegalArgumentException("Could not evaluate " + this);
         }
+    }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return exp1.toString() + " " + op + " " + exp2.toString();
     }
 }

@@ -36,23 +36,29 @@ public class Condition extends Expression
     {
         try
         {
-            if (relop.equals("="))
-                return exp1.eval(env).equals(exp2.eval(env));
-            else if (relop.equals("<>"))
-                return !exp1.eval(env).equals(exp2.eval(env));
-            else if (relop.equals("<"))
-                return (Integer) exp1.eval(env) < (Integer) exp2.eval(env);
-            else if (relop.equals(">"))
-                return (Integer) exp1.eval(env) > (Integer) exp2.eval(env);
-            else if (relop.equals("<="))
-                return (Integer) exp1.eval(env) <= (Integer) exp2.eval(env);
-            else
-                return (Integer) exp1.eval(env) >= (Integer) exp2.eval(env);
+            return switch (relop)
+            {
+                case "=" -> exp1.eval(env).equals(exp2.eval(env));
+                case "<>" -> !exp1.eval(env).equals(exp2.eval(env));
+                case "<" -> (Integer) exp1.eval(env) < (Integer) exp2.eval(env);
+                case ">" -> (Integer) exp1.eval(env) > (Integer) exp2.eval(env);
+                case "<=" -> (Integer) exp1.eval(env) <= (Integer) exp2.eval(env);
+                default -> (Integer) exp1.eval(env) >= (Integer) exp2.eval(env);
+            };
         }
         catch (ClassCastException e)
         {
-            throw new IllegalArgumentException("Could not evaluate the expression " +
-                    exp1.eval(env) + " " + relop + " " + exp2.eval(env));
+            throw new IllegalArgumentException("Could not evaluate " + this);
         }
+    }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return exp1.toString() + " " + relop + " " + exp2.toString();
     }
 }

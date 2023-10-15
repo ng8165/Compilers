@@ -31,4 +31,14 @@ public class Bool extends Expression
     {
         return value;
     }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return value ? "TRUE" : "FALSE";
+    }
 }

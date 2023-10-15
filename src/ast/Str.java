@@ -26,4 +26,14 @@ public class Str extends Expression
     {
         return str;
     }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return "'" + str + "'";
+    }
 }

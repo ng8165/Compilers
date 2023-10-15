@@ -2,7 +2,8 @@ x := 2;
 y := x + 1;
 x := x + y;
 WRITELN((x * y) mod 2);
-IF (1 < 2) THEN
+x := 5;
+IF 3>=2 THEN
 BEGIN
     WRITELN(6*9);
     WRITELN((1 < 2) OR (2 < 1));
@@ -20,6 +21,13 @@ FOR i := x-1 TO x+1 DO
 BEGIN
     sum := sum + i;
     WRITELN(sum);
+END;
+
+x := 2;
+WHILE x >= 0 DO
+BEGIN
+    x := x-1;
+    WRITELN(x);
 END;
 
 // WRITELN(-TRUE);

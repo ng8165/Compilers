@@ -43,8 +43,17 @@ public class UnOp extends Expression
         }
         catch (ClassCastException e)
         {
-            throw new IllegalArgumentException("Could not evaluate the expression " +
-                    op + (op.equals("NOT") ? " " : "") + exp.eval(env));
+            throw new IllegalArgumentException("Could not evaluate " + this);
         }
+    }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return op + (op.equals("NOT") ? " " : "") + exp.toString();
     }
 }

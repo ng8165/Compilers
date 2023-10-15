@@ -26,11 +26,20 @@ public class While extends Statement
     /**
      * Executes the WHILE-DO loop.
      * @param env the Environment
+     * @throws IllegalArgumentException if cond does not evaluate to a boolean
      */
     @Override
     public void exec(Environment env)
     {
-        while ((Boolean) cond.eval(env))
-            stmt.exec(env);
+        try
+        {
+            while ((Boolean) cond.eval(env))
+                stmt.exec(env);
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException("Could not execute WHILE " + cond +
+                    " DO ...");
+        }
     }
 }

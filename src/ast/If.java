@@ -9,16 +9,16 @@ import environment.Environment;
  */
 public class If extends Statement
 {
-    private final Condition cond;
+    private final Expression cond;
     private final Statement thenStmt;
     private final Statement elseStmt;
 
     /**
      * Initializes the cond and thenStmt instance variables.
-     * @param cond the Condition to check
+     * @param cond the Expression to check
      * @param thenStmt the Statement to run in the Condition is TRUE
      */
-    public If(Condition cond, Statement thenStmt)
+    public If(Expression cond, Statement thenStmt)
     {
         this.cond = cond;
         this.thenStmt = thenStmt;
@@ -27,11 +27,11 @@ public class If extends Statement
 
     /**
      * Initializes the cond, thenStmt, and elseStmt instance variables.
-     * @param cond the Condition to check
+     * @param cond the Expression to check
      * @param thenStmt the Statement to run in the Condition is TRUE
      * @param elseStmt the Statement to run in the Condition is FALSE
      */
-    public If(Condition cond, Statement thenStmt, Statement elseStmt)
+    public If(Expression cond, Statement thenStmt, Statement elseStmt)
     {
         this.cond = cond;
         this.thenStmt = thenStmt;
@@ -39,16 +39,24 @@ public class If extends Statement
     }
 
     /**
-     * Executes the If block. If the Condition is TRUE, executes the thenStmt.
-     * If the Condition is FALSE and there is an elseStmt, executes it.
+     * Executes the If block. If cond evaluates to TRUE, executes the thenStmt.
+     * If cond evaluates to FALSE and there is an elseStmt, executes it.
      * @param env the Environment
+     * @throws IllegalArgumentException if cond does not evaluate to a boolean
      */
     @Override
     public void exec(Environment env)
     {
-        if ((Boolean) cond.eval(env))
-            thenStmt.exec(env);
-        else if (elseStmt != null)
-            elseStmt.exec(env);
+        try
+        {
+            if ((Boolean) cond.eval(env))
+                thenStmt.exec(env);
+            else if (elseStmt != null)
+                elseStmt.exec(env);
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException("Could not execute IF " + cond + " THEN ...");
+        }
     }
 }

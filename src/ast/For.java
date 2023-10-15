@@ -36,13 +36,22 @@ public class For extends Statement
     @Override
     public void exec(Environment env)
     {
-        int startIndex = (Integer) start.eval(env);
-        int endIndex = (Integer) end.eval(env);
-
-        for (int i=startIndex; i<=endIndex; i++)
+        try
         {
-            env.setVariable(var, i);
-            stmt.exec(env);
+            int startIndex = (Integer) start.eval(env);
+            int endIndex = (Integer) end.eval(env);
+
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                env.setVariable(var, i);
+                stmt.exec(env);
+            }
+        }
+        catch (ClassCastException e)
+        {
+            throw new IllegalArgumentException("Could not execute FOR " + var + " := " +
+                    start + " TO " + end + " DO ...");
+
         }
     }
 }

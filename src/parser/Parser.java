@@ -4,7 +4,6 @@ import scanner.*;
 import ast.*;
 import ast.Number; // remove ambiguity with java.lang.Number
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,9 +92,8 @@ public class Parser
      *   - FOR var := exp TO exp DO stmt
      * @return a parsed Statement (Writeln, Block, or Assignment) that represents the tokens
      * @throws ScanErrorException if there is an error in scanning
-     * @throws IOException if there is an error in reading user input
      */
-    public Statement parseStatement() throws ScanErrorException, IOException
+    public Statement parseStatement() throws ScanErrorException
     {
         if (currentToken.equals("WRITELN"))
         {
@@ -137,7 +135,7 @@ public class Parser
         else if (currentToken.equals("IF"))
         {
             eat(currentToken); // eat "IF"
-            Condition cond = (Condition) parseCondition();
+            Expression cond = parseCondition();
             eat("THEN", Token.Type.KEYWORD);
             Statement thenStmt = parseStatement();
 

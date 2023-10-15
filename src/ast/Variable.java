@@ -30,4 +30,14 @@ public class Variable extends Expression
     {
         return env.getVariable(name);
     }
+
+    /**
+     * Prints the Expression as a String.
+     * @return String representation of the Expression
+     */
+    @Override
+    public String toString()
+    {
+        return name;
+    }
 }
