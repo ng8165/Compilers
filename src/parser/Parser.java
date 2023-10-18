@@ -22,21 +22,11 @@ public class Parser
      * This constructor takes a Scanner. It also loads the first token into currentToken and
      * initializes an identifiers HashMap for the symbol table.
      * @param sc Scanner that scans the file into tokens
-     * @throws ScanErrorException if there is an error in scanning
      */
-    public Parser(Scanner sc) throws ScanErrorException
+    public Parser(Scanner sc)
     {
         this.sc = sc;
         currentToken = sc.nextToken();
-    }
-
-    /**
-     * Returns true if there is another statement and false if not.
-     * @return true if there is another statement; otherwise false.
-     */
-    public boolean hasNext()
-    {
-        return sc.hasNext();
     }
 
     /**
@@ -44,9 +34,8 @@ public class Parser
      * String content and the Token.Type.
      * @param content the String content of the Token
      * @param type the Type of the Token
-     * @throws ScanErrorException if there is an error in scanning
      */
-    private void eat(String content, Token.Type type) throws ScanErrorException
+    private void eat(String content, Token.Type type)
     {
         eat(new Token(content, type));
     }
@@ -55,10 +44,9 @@ public class Parser
      * The eat function checks that the expected token is equal to the currentToken.
      * If it is not, it throws an IllegalArgumentException.
      * @param expected the expected Token
-     * @throws ScanErrorException if there is an error in scanning
      * @throws IllegalArgumentException if the expected token is not equal to currentToken
      */
-    private void eat(Token expected) throws ScanErrorException, IllegalArgumentException
+    private void eat(Token expected) throws IllegalArgumentException
     {
         if (currentToken.equals(expected))
             currentToken = sc.nextToken();
@@ -71,13 +59,57 @@ public class Parser
      * The parseNumber function parses a number.
      * @precondition currentToken's Type should be NUMBER
      * @return a parsed Number which contains the integer
-     * @throws ScanErrorException if there is an error in scanning
      */
-    private Number parseNumber() throws ScanErrorException
+    private Number parseNumber()
     {
         Number num = new Number(Integer.parseInt(currentToken.getContent()));
         eat(currentToken);
         return num;
+    }
+
+    /**
+     * The parseProgram function parses the entire Pascal program. Valid programs include:
+     *   - PROCEDURE id(param, param, param, ...); stmt program
+     *   - stmt .
+     * @return the parsed Program
+     * @throws ScanErrorException if there is an error in parsing
+     */
+    public Program parseProgram() throws ScanErrorException
+    {
+        List<ProcedureDeclaration> procedures = new ArrayList<>();
+
+        while (currentToken.equals("PROCEDURE"))
+        {
+            eat(currentToken); // eat "PROCEDURE" keyword
+
+            String id = currentToken.getContent();
+            if (currentToken.getType() != Token.Type.IDENTIFIER)
+                throw new ScanErrorException(id + " is not a valid identifier");
+            eat(currentToken);
+
+            List<String> params = new ArrayList<>();
+            eat("(", Token.Type.SEPARATOR);
+
+            // EAT PARAMS
+            while (!currentToken.equals(")"))
+            {
+                String param = currentToken.getContent();
+                if (currentToken.getType() != Token.Type.IDENTIFIER)
+                    throw new ScanErrorException(param + " is not a valid identifier");
+                eat(currentToken);
+                params.add(param);
+
+                if (currentToken.equals(","))
+                    eat(currentToken);
+            }
+
+            eat(")", Token.Type.SEPARATOR);
+            eat(";", Token.Type.SEPARATOR);
+
+            procedures.add(new ProcedureDeclaration(id, params, parseStatement()));
+        }
+
+        return new Program(procedures, parseStatement());
     }
 
     /**
@@ -91,7 +123,7 @@ public class Parser
      *   - WHILE cond DO stmt
      *   - FOR var := exp TO exp DO stmt
      * @return a parsed Statement (Writeln, Block, or Assignment) that represents the tokens
-     * @throws ScanErrorException if there is an error in scanning
+     * @throws ScanErrorException if there is an error in parsing
      */
     public Statement parseStatement() throws ScanErrorException
     {
@@ -170,14 +202,48 @@ public class Parser
 
             return new For(var, start, end, parseStatement());
         }
+        else if (currentToken.equals("BREAK"))
+        {
+            eat(currentToken);
+            eat(";", Token.Type.SEPARATOR);
+            return new Break();
+        }
+        else if (currentToken.equals("CONTINUE"))
+        {
+            eat(currentToken);
+            eat(";", Token.Type.SEPARATOR);
+            return new Continue();
+        }
         else if (currentToken.getType() == Token.Type.IDENTIFIER)
         {
             String var = currentToken.getContent();
             eat(currentToken); // eat the variable name
-            eat(":=", Token.Type.OPERAND);
-            Expression exp = parseCondition();
-            eat(";", Token.Type.SEPARATOR);
-            return new Assignment(var, exp);
+
+            if (currentToken.equals("(")) // ProcedureCall as Statement
+            {
+                eat(currentToken);
+
+                // EAT ARGS
+                List<Expression> args = new ArrayList<>();
+                while (!currentToken.equals(")"))
+                {
+                    Expression arg = parseCondition();
+                    args.add(arg);
+                    if (currentToken.equals(","))
+                        eat(currentToken);
+                }
+
+                eat(")", Token.Type.SEPARATOR);
+                eat(";", Token.Type.SEPARATOR);
+                return new Assignment(null, new ProcedureCall(var, args));
+            }
+            else // traditional Assignment
+            {
+                eat(":=", Token.Type.OPERAND);
+                Expression exp = parseCondition();
+                eat(";", Token.Type.SEPARATOR);
+                return new Assignment(var, exp);
+            }
         }
 
         throw new ScanErrorException(currentToken.getContent() +
@@ -192,9 +258,10 @@ public class Parser
      *   - an integer (parsed by parseNumber)
      *   - TRUE and FALSE
      *   - an identifier (looked up in the identifiers HashMap)
+     *   - id(arg, arg, arg, ...) (a procedure call)
      *   - a String
      * @return a parsed Expression which represents the factor
-     * @throws ScanErrorException if there is an error in scanning
+     * @throws ScanErrorException if there is an error in parsing
      */
     private Expression parseFactor() throws ScanErrorException
     {
@@ -233,9 +300,27 @@ public class Parser
         }
         else if (currentToken.getType() == Token.Type.IDENTIFIER)
         {
-            Variable var = new Variable(currentToken.getContent());
+            String id = currentToken.getContent();
             eat(currentToken);
-            return var;
+
+            if (!currentToken.equals("("))
+                return new Variable(id);
+
+            eat(currentToken); // eat (
+
+            // EAT ARGS
+            List<Expression> args = new ArrayList<>();
+            while (!currentToken.equals(")"))
+            {
+                Expression arg = parseCondition();
+                args.add(arg);
+
+                if (currentToken.equals(","))
+                    eat(currentToken);
+            }
+
+            eat(")", Token.Type.SEPARATOR);
+            return new ProcedureCall(id, args);
         }
         else if (currentToken.getType() == Token.Type.NUMBER)
             return parseNumber();
@@ -251,9 +336,8 @@ public class Parser
      *   - term AND factor
      *   - factor
      * @return a parsed Expression which represents the term
-     * @throws ScanErrorException if there is an error in scanning
      */
-    private Expression parseTerm() throws ScanErrorException
+    private Expression parseTerm()
     {
         boolean cont = true;
         Expression factor = parseFactor();
@@ -295,9 +379,8 @@ public class Parser
      *   - expr OR term
      *   - term
      * @return a parsed Expression which represents the expression
-     * @throws ScanErrorException if there is an error in scanning
      */
-    private Expression parseExpression() throws ScanErrorException
+    private Expression parseExpression()
     {
         boolean cont = true;
         Expression term = parseTerm();
@@ -336,9 +419,8 @@ public class Parser
      *   - expr >= expr
      *   - expr
      * @return a parsed Expression which represents the condition
-     * @throws ScanErrorException if there is an error in scanning
      */
-    private Expression parseCondition() throws ScanErrorException
+    private Expression parseCondition()
     {
         Expression exp1 = parseExpression();
         if (currentToken.getType() != Token.Type.RELOPS)

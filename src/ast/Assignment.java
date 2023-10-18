@@ -26,13 +26,16 @@ public class Assignment extends Statement
     }
 
     /**
-     * Executes the Assingment by setting the value of var to the evaluation of exp
+     * Executes the Assignment by setting the value of var to the evaluation of exp
      * in the env Environment.
      * @param env the Environment
      */
     @Override
     public void exec(Environment env)
     {
-        env.setVariable(var, exp.eval(env));
+        if (var == null) // when ProcedureCall is used as a Statement
+            exp.eval(env);
+        else
+            env.setVariable(var, exp.eval(env));
     }
 }

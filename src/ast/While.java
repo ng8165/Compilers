@@ -34,7 +34,20 @@ public class While extends Statement
         try
         {
             while ((Boolean) cond.eval(env))
-                stmt.exec(env);
+            {
+                try
+                {
+                    stmt.exec(env);
+                }
+                catch (BreakException e)
+                {
+                    break;
+                }
+                catch (ContinueException e)
+                {
+                    continue; // not really necessary but there needs to be something here
+                }
+            }
         }
         catch (ClassCastException e)
         {

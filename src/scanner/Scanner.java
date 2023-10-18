@@ -151,10 +151,8 @@ public class Scanner
      * @return the number as a Token
      * @precondition currentChar is a digit when the method is called
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanNumber() throws ScanErrorException
+    private Token scanNumber()
     {
         StringBuilder number = new StringBuilder();
 
@@ -173,10 +171,8 @@ public class Scanner
      * @return the identifier as a Token
      * @precondition the currentChar must be a letter
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanIdentifier() throws ScanErrorException
+    private Token scanIdentifier()
     {
         StringBuilder identifier = new StringBuilder();
 
@@ -195,10 +191,8 @@ public class Scanner
      * @return the operand as a Token; if a comment, returns nextToken after the end of the comment
      * @precondition currentChar must be an operand (see isOperand for more details)
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanOperand() throws ScanErrorException
+    private Token scanOperand()
     {
         String operand = "" + currentChar;
         eat(currentChar);
@@ -224,10 +218,8 @@ public class Scanner
      * @return the separator as a Token
      * @precondition currentChar must be a separator (see isSeparator for details)
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanSeparator() throws ScanErrorException
+    private Token scanSeparator()
     {
         StringBuilder operand = new StringBuilder();
         operand.append(currentChar);
@@ -259,10 +251,8 @@ public class Scanner
      * @return returns the next token after the comment ends
      * @precondition // must be present before this method is called
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanSingleComment() throws ScanErrorException
+    private Token scanSingleComment()
     {
         do
             eat(currentChar);
@@ -277,10 +267,8 @@ public class Scanner
      * @return returns the text token after the comment ends
      * @precondition (* must be present before this method is called
      * @postcondition from the eat function, replaces currentChar; if no more characters, sets eof
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
      */
-    private Token scanMultiComment() throws ScanErrorException
+    private Token scanMultiComment()
     {
         eat(currentChar); // eat the * in (*
         char lastChar;
@@ -300,8 +288,7 @@ public class Scanner
      * The nextToken method skips all whitespace and returns the next lexeme as a Token.
      * @return the next token in the stream; "END" if at end-of-file
      * @postcondition parses the next token and eats characters in the stream
-     * @throws ScanErrorException from the eat function when the expected character
-     *                            and currentChar are different
+     * @throws ScanErrorException if there is an unrecognized character
      */
     public Token nextToken() throws ScanErrorException
     {

@@ -9,7 +9,7 @@ package scanner;
  * @version 062014
  *
  */
-public class ScanErrorException extends Exception
+public class ScanErrorException extends RuntimeException
 {
     /**
      * default constructor for ScanErrorObjects
@@ -18,9 +18,10 @@ public class ScanErrorException extends Exception
     {
         super();
     }
+
     /**
      * Constructor for ScanErrorObjects that includes a reason for the error
-     * @param reason
+     * @param reason reason for the Exception
      */
     public ScanErrorException(String reason)
     {

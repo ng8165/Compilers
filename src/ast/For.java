@@ -44,7 +44,19 @@ public class For extends Statement
             for (int i = startIndex; i <= endIndex; i++)
             {
                 env.setVariable(var, i);
-                stmt.exec(env);
+
+                try
+                {
+                    stmt.exec(env);
+                }
+                catch (BreakException e)
+                {
+                    break;
+                }
+                catch (ContinueException e)
+                {
+                    continue; // not necessary but there needs to be something here
+                }
             }
         }
         catch (ClassCastException e)

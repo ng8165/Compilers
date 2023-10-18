@@ -2,7 +2,6 @@ package parser;
 
 import environment.Environment;
 import scanner.*;
-import ast.Statement;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -27,7 +26,6 @@ public class ParserTester
         Parser ps = new Parser(sc);
         Environment env = new Environment();
 
-        while (ps.hasNext())
-            ps.parseStatement().exec(env);
+        ps.parseProgram().exec(env);
     }
 }
