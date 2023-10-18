@@ -1,3 +1,4 @@
+BEGIN
 x := 2;
 y := x + 1;
 x := x + y;
@@ -33,4 +34,5 @@ END;
 // WRITELN(-TRUE);
 // WRITELN(-1 + 2 AND TRUE);
 WRITELN('hello world');
+END;
 .
