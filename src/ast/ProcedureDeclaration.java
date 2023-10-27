@@ -5,6 +5,8 @@ import environment.Environment;
 
 /**
  * The ProcedureDeclaration class represents the declaration of a procedure.
+ * Contains the name of the procedure, a list of parameters, and the Statement of
+ * the procedure.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -15,7 +17,7 @@ public class ProcedureDeclaration extends Statement
     private final Statement stmt;
 
     /**
-     * Instantiates the instance variables (procedure ID and the statement).
+     * Instantiates the instance variables (procedure ID, list of parameters, and the statement).
      * @param id ID of the procedure
      * @param params the parameters of the procedure
      * @param stmt statement to execute when the procedure is called
@@ -37,7 +39,7 @@ public class ProcedureDeclaration extends Statement
     }
 
     /**
-     * Gets the Statement of the procedure
+     * Gets the Statement of the procedure.
      * @return procedure Statement
      */
     public Statement getStatement()

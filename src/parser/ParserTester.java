@@ -21,7 +21,7 @@ public class ParserTester
      */
     public static void main(String[] args) throws ScanErrorException, IOException
     {
-        String file = "parserTestAST.txt";
+        String file = "parserTestProcedure.txt";
         Scanner sc = new Scanner(new FileInputStream("./src/parser/" + file));
         Parser ps = new Parser(sc);
         Environment env = new Environment();

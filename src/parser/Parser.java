@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The Parser class executes Parser-like statements as it parses them.
- * It uses the Scanner to scan tokens and uses the Pascal grammar to generate a parse tree.
+ * The Parser class executes Pascal-like statements as it parses them.
+ * It uses the Scanner to scan tokens and uses the Pascal grammar to generate an AST.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -68,8 +68,61 @@ public class Parser
     }
 
     /**
+     * The parseParams function parses a list of parameters. A list of parameters can
+     * be empty parentheses or have any number of comma-separated identifiers within
+     * the parentheses.
+     * @return List of parameters as Strings
+     * @throws ScanErrorException if a non-identifier is found in the parameter list
+     */
+    private List<String> parseParams() throws ScanErrorException
+    {
+        List<String> params = new ArrayList<>();
+        eat("(", Token.Type.SEPARATOR);
+
+        while (!currentToken.equals(")"))
+        {
+            String param = currentToken.getContent();
+            if (currentToken.getType() != Token.Type.IDENTIFIER)
+                throw new ScanErrorException(param + " is not a valid identifier");
+            eat(currentToken);
+
+            params.add(param);
+
+            if (currentToken.equals(","))
+                eat(currentToken);
+        }
+
+        eat(")", Token.Type.SEPARATOR);
+        return params;
+    }
+
+    /**
+     * The parseArgs function parses a list of arguments. A list of arguments can be
+     * a set of empty parentheses or have any number of comma-separated Expressions
+     * within the parentheses.
+     * @return List of arguments as Expressions
+     */
+    private List<Expression> parseArgs()
+    {
+        eat("(", Token.Type.SEPARATOR);
+        List<Expression> args = new ArrayList<>();
+
+        while (!currentToken.equals(")"))
+        {
+            Expression arg = parseCondition();
+            args.add(arg);
+
+            if (currentToken.equals(","))
+                eat(currentToken);
+        }
+
+        eat(")", Token.Type.SEPARATOR);
+        return args;
+    }
+
+    /**
      * The parseProgram function parses the entire Pascal program. Valid programs include:
-     *   - PROCEDURE id(param, param, param, ...); stmt program
+     *   - PROCEDURE id(params); stmt program
      *   - stmt .
      * @return the parsed Program
      * @throws ScanErrorException if there is an error in parsing
@@ -86,24 +139,7 @@ public class Parser
             if (currentToken.getType() != Token.Type.IDENTIFIER)
                 throw new ScanErrorException(id + " is not a valid identifier");
             eat(currentToken);
-
-            List<String> params = new ArrayList<>();
-            eat("(", Token.Type.SEPARATOR);
-
-            // EAT PARAMS
-            while (!currentToken.equals(")"))
-            {
-                String param = currentToken.getContent();
-                if (currentToken.getType() != Token.Type.IDENTIFIER)
-                    throw new ScanErrorException(param + " is not a valid identifier");
-                eat(currentToken);
-                params.add(param);
-
-                if (currentToken.equals(","))
-                    eat(currentToken);
-            }
-
-            eat(")", Token.Type.SEPARATOR);
+            List<String> params = parseParams();
             eat(";", Token.Type.SEPARATOR);
 
             procedures.add(new ProcedureDeclaration(id, params, parseStatement()));
@@ -117,12 +153,15 @@ public class Parser
      *   - WRITELN(cond);
      *   - READLN(id);
      *   - BEGIN stmts END;
-     *   - id := cond;
      *   - IF cond THEN stmt
      *   - IF cond THEN stmt ELSE stmt
      *   - WHILE cond DO stmt
      *   - FOR var := exp TO exp DO stmt
-     * @return a parsed Statement (Writeln, Block, or Assignment) that represents the tokens
+     *   - BREAK;
+     *   - CONTINUE;
+     *   - id := cond;
+     *   - id := procedure(args);
+     * @return a parsed Statement that represents the tokens
      * @throws ScanErrorException if there is an error in parsing
      */
     public Statement parseStatement() throws ScanErrorException
@@ -130,11 +169,9 @@ public class Parser
         if (currentToken.equals("WRITELN"))
         {
             eat(currentToken); // eat "WRITELN" token
-            eat("(", Token.Type.SEPARATOR);
-            Expression exp = parseCondition();
-            eat(")", Token.Type.SEPARATOR);
+            List<Expression> args = parseArgs();
             eat(";", Token.Type.SEPARATOR);
-            return new Writeln(exp);
+            return new Writeln(args);
         }
         else if (currentToken.equals("READLN"))
         {
@@ -181,7 +218,7 @@ public class Parser
         else if (currentToken.equals("WHILE"))
         {
             eat(currentToken); // eat "WHILE"
-            Condition cond = (Condition) parseCondition();
+            Expression cond = parseCondition();
             eat("DO", Token.Type.KEYWORD);
             return new While(cond, parseStatement());
         }
@@ -221,19 +258,7 @@ public class Parser
 
             if (currentToken.equals("(")) // ProcedureCall as Statement
             {
-                eat(currentToken);
-
-                // EAT ARGS
-                List<Expression> args = new ArrayList<>();
-                while (!currentToken.equals(")"))
-                {
-                    Expression arg = parseCondition();
-                    args.add(arg);
-                    if (currentToken.equals(","))
-                        eat(currentToken);
-                }
-
-                eat(")", Token.Type.SEPARATOR);
+                List<Expression> args = parseArgs();
                 eat(";", Token.Type.SEPARATOR);
                 return new Assignment(null, new ProcedureCall(var, args));
             }
@@ -254,12 +279,13 @@ public class Parser
      * The parseFactor function parses a factor. Valid factors include:
      *   - (cond)
      *   - -factor
+     *   - TRUE
+     *   - FALSE
      *   - NOT cond
-     *   - an integer (parsed by parseNumber)
-     *   - TRUE and FALSE
-     *   - an identifier (looked up in the identifiers HashMap)
-     *   - id(arg, arg, arg, ...) (a procedure call)
      *   - a String
+     *   - id
+     *   - procedure(args)
+     *   - an integer
      * @return a parsed Expression which represents the factor
      * @throws ScanErrorException if there is an error in parsing
      */
@@ -306,20 +332,7 @@ public class Parser
             if (!currentToken.equals("("))
                 return new Variable(id);
 
-            eat(currentToken); // eat (
-
-            // EAT ARGS
-            List<Expression> args = new ArrayList<>();
-            while (!currentToken.equals(")"))
-            {
-                Expression arg = parseCondition();
-                args.add(arg);
-
-                if (currentToken.equals(","))
-                    eat(currentToken);
-            }
-
-            eat(")", Token.Type.SEPARATOR);
+            List<Expression> args = parseArgs();
             return new ProcedureCall(id, args);
         }
         else if (currentToken.getType() == Token.Type.NUMBER)

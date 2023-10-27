@@ -1,23 +1,21 @@
-PROCEDURE max(x, y);
-BEGIN
-    max := x;
-    IF y > x THEN max := y;
-END;
+procedure recur(x,y);
+begin
+    writeln(x, ' ', y);
+    if x=0 then
+    begin
+        writeln('ZERO');
+        recur := 0;
+    end;
+    else if x<0 then
+        writeln('SHOULDNT BE HERE');
+    else
+    begin
+        recur(y,x);
+        recur := recur(x-1, y);
+    end;
+end;
 
-PROCEDURE PRINT(x);
-    WRITELN(x);
-
-BEGIN
-    PRINT(max(3, 5));
-
-    i := 0;
-    WHILE 1 + 1 = 2 DO
-    BEGIN
-        i := i + 1;
-        IF i = 3 THEN BREAK;
-        WRITELN(i);
-        IF i = 2 THEN CONTINUE;
-        WRITELN(i);
-    END;
-END;
-.
+begin
+    // writeln(recur(2,0));
+    writeln(2*3 + ' is a cool boolean');
+end;

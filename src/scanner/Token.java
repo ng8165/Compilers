@@ -75,7 +75,7 @@ public class Token
     public Token(String content, Type type)
     {
         this.content = content;
-        if (KEYWORDS.contains(content))
+        if (KEYWORDS.contains(content.toUpperCase())) // case insensitive
             this.type = Type.KEYWORD;
         else if (RELOPS.contains(content))
             this.type = Type.RELOPS;
@@ -120,9 +120,20 @@ public class Token
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Token other)
-            return type == other.type && content.equals(other.content);
+        {
+            if (type != other.type)
+                return false;
+            else if (type == Type.STRING)
+                return content.equals(other.content);
+            return content.equalsIgnoreCase(other.content); // case-insensitive
+        }
         else if (obj instanceof String other)
-            return content.equals(other);
+        {
+            if (type == Type.STRING)
+                return content.equals(other);
+            return content.equalsIgnoreCase(other); // case-insensitive
+        }
+
         return false;
     }
 }

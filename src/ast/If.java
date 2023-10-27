@@ -3,7 +3,9 @@ package ast;
 import environment.Environment;
 
 /**
- * The If class represents an IF-THEN block and an IF-THEN-ELSE block.
+ * The If class contains a Condition. If the Condition evaluates to TRUE,
+ * the Statement in the THEN block is executed. Otherwise, if there is a Statement
+ * in the ELSE block, it is also executed.
  * @author Nelson Gou
  * @version 10/17/23
  */

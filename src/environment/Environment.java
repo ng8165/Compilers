@@ -6,7 +6,8 @@ import java.util.Map;
 import ast.ProcedureDeclaration;
 
 /**
- * The Environment class remembers the values of variables.
+ * The Environment class stores the values of variables and procedures
+ * based on a String identifier.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -69,16 +70,18 @@ public class Environment
     /**
      * Gets the value of a variable.
      * Checks the current Environment. If it is not present, checks the root Environment.
-     * @precondition the variable must already be set in the Environment
      * @param variable the name of the variable
+     * @throws IllegalArgumentException if the variable is not defined
      * @return the value
      */
     public Object getVariable(String variable)
     {
         if (variables.containsKey(variable))
             return variables.get(variable);
-        else
+        else if (parent != null)
             return parent.getVariable(variable);
+
+        throw new IllegalArgumentException(variable + " is not defined");
     }
 
     /**

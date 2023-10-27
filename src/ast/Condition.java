@@ -3,7 +3,8 @@ package ast;
 import environment.Environment;
 
 /**
- * The Condition class represents a boolean Condition.
+ * The Condition class represents a boolean Condition. Consists of a relop
+ * (relative operator) and two Expressions.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -27,7 +28,7 @@ public class Condition extends Expression
     }
 
     /**
-     * Evaluates the result of the Condition.
+     * Evaluates the result of the Condition based on the relop (=, <>, <, >, <=, or >=).
      * @param env the Environment
      * @return true if the Condition is true; false if not.
      */

@@ -5,7 +5,8 @@ import environment.Environment;
 import java.util.List;
 
 /**
- * The Program class represents a Pascal program.
+ * The Program class represents a Pascal program, which is a list
+ * of procedures and a Statement.
  * @author Nelson Gou
  * @version 10/17/23
  */

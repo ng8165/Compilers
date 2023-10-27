@@ -2,36 +2,50 @@ package ast;
 
 import environment.Environment;
 
+import java.util.List;
+
 /**
- * The Writeln class represents a WRITELN(expr) statement.
+ * The Writeln class represents a WRITELN(args) statement and prints.
  * @author Nelson Gou
  * @version 10/17/23
  */
 public class Writeln extends Statement
 {
-    private final Expression exp;
+    private final List<Expression> exprs;
 
     /**
-     * This constructor takes an Expression and initializes the exp instance variable.
-     * @param exp the Expression within the WRITELN statement
+     * This constructor instantiates arguments (a List of Expressions).
+     * @param exprs the Expression within the WRITELN statement
      */
-    public Writeln(Expression exp)
+    public Writeln(List<Expression> exprs)
     {
-        this.exp = exp;
+        this.exprs = exprs;
     }
 
     /**
-     * Executes the WRITELN statement by printing the evaluation of the Expression.
+     * Formats the object as a String. (used to print Bools as uppercase instead of lowercase).
+     * @param obj the Object to format
+     * @return a formatted String representing obj
+     */
+    protected static String printFormat(Object obj)
+    {
+        if (obj instanceof Boolean bool)
+            return bool ? "TRUE" : "FALSE";
+        else
+            return obj.toString();
+    }
+
+    /**
+     * Executes the WRITELN statement by concatenating all arguments
+     * and printing it to user output.
      * @param env the Environment
      */
     @Override
     public void exec(Environment env)
     {
-        Object obj = exp.eval(env);
-
-        if (obj instanceof Boolean bool)
-            System.out.println(bool ? "TRUE" : "FALSE");
-        else
-            System.out.println(obj);
+        StringBuilder str = new StringBuilder();
+        for (Expression expr: exprs)
+            str.append(printFormat(expr.eval(env)));
+        System.out.println(str);
     }
 }

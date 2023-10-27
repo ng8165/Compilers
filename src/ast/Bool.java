@@ -33,7 +33,7 @@ public class Bool extends Expression
     }
 
     /**
-     * Prints the Expression as a String.
+     * Prints the Bool as a String (capital TRUE and FALSE instead of lowercase).
      * @return String representation of the Expression
      */
     @Override

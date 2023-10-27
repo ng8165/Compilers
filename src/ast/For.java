@@ -3,7 +3,9 @@ package ast;
 import environment.Environment;
 
 /**
- * The For class represents a FOR loop.
+ * The For class represents a for loop. For loops evaluate a start Expression and assign it
+ * to a given variable. The variable is then incremented until it is greater than the end
+ * Expression. The loop execution then stops.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -30,11 +32,14 @@ public class For extends Statement
     }
 
     /**
-     * Executes the FOR loop.
+     * Executes the FOR loop. Evaluates start and assigns it to the variable. Increments
+     * the variable until it is greater than end. If a BreakException is caught, the loop
+     * is exited. If a ContinueException is caught, one execution of the loop is skipped.
      * @param env the Environment
+     * @throws IllegalArgumentException if start or end Expression does not evaluate to a number
      */
     @Override
-    public void exec(Environment env)
+    public void exec(Environment env) throws IllegalArgumentException
     {
         try
         {
@@ -63,7 +68,6 @@ public class For extends Statement
         {
             throw new IllegalArgumentException("Could not execute FOR " + var + " := " +
                     start + " TO " + end + " DO ...");
-
         }
     }
 }

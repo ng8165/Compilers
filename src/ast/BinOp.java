@@ -2,9 +2,11 @@ package ast;
 
 import environment.Environment;
 
+import static ast.Writeln.printFormat;
+
 /**
- * The BinOp class represents a binary operator expression.
- * Some examples of binary operators include plus, minus, asterisk, AND, OR, etc.
+ * The BinOp class represents an operator expression that has two Expressions.
+ * Some examples of operators include plus, minus, asterisk, mod, AND, OR, etc.
  * @author Nelson Gou
  * @version 10/17/23
  */
@@ -17,7 +19,7 @@ public class BinOp extends Expression
     /**
      * This constructor takes in a String operator and two Expressions and initializes
      * the corresponding instance variables with them.
-     * @precondition op is +, -, *, /, MOD, AND, or OR
+     * @precondition op is +, -, *, /, mod, AND, or OR
      * @param op the operator
      * @param exp1 the first Expression
      * @param exp2 the second Expression
@@ -30,8 +32,7 @@ public class BinOp extends Expression
     }
 
     /**
-     * Evaluates the value of the BinOp based on the operator (addition, subtraction,
-     * multiplication, division).
+     * Evaluates the value of the BinOp based on the operator (+, -, *, /, mod, AND, OR).
      * @param env the Environment
      * @return the integer evaluation of the Expression
      * @throws IllegalArgumentException if the Expression types cannot apply to the operator
@@ -43,7 +44,12 @@ public class BinOp extends Expression
         {
             return switch (op)
             {
-                case "+" -> (Integer) exp1.eval(env) + (Integer) exp2.eval(env);
+                case "+" -> {
+                    Object eval1 = exp1.eval(env), eval2 = exp2.eval(env);
+                    if (eval1 instanceof String || eval2 instanceof String)
+                        yield printFormat(eval1) + printFormat(eval2); // string concatenation
+                    yield (Integer) eval1 + (Integer) eval2; // addition
+                }
                 case "-" -> (Integer) exp1.eval(env) - (Integer) exp2.eval(env);
                 case "*" -> (Integer) exp1.eval(env) * (Integer) exp2.eval(env);
                 case "/" -> (Integer) exp1.eval(env) / (Integer) exp2.eval(env);

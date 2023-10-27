@@ -4,7 +4,7 @@ import java.util.Scanner;
 import environment.Environment;
 
 /**
- * The Readln class represents a READLN statement.
+ * The Readln class represents a READLN statement, which reads an integer from user input.
  * @author Nelson Gou
  * @version 10/17/23
  */

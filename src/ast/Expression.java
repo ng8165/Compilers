@@ -4,12 +4,12 @@ import environment.Environment;
 
 /**
  * The Expression class represents an expression. Valid expressions include:
- *   - a variable (as a String)
- *   - binary operator (two Expressions and a String operator)
- *   - unary operator
+ *   - Variable
+ *   - BinOp (binary operator)
+ *   - UnOp (unary operator)
  *   - Bool, Str, and Number literals
- *   - a Condition
- *   - a ProcedureCall
+ *   - Condition
+ *   - ProcedureCall
  * @author Nelson Gou
  * @version 10/17/23
  */
