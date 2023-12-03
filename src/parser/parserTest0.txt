@@ -1,3 +1,0 @@
-WRITELN(3);
-WRITELN(-(-3));
-.

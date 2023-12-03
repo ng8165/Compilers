@@ -1,0 +1,8 @@
+var str: string;
+var num: integer;
+
+begin
+    str := 'mips is the best thing to ever exist; it is ' + 10 + '/' + 10 + ', and that statement is ' + true;
+    writeln(str);
+end;
+.
