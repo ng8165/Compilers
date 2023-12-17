@@ -39,7 +39,11 @@ public class Variable extends Expression
     @Override
     public Type compile(Emitter e)
     {
-        e.emit("lw $v0 var" + name + "\t# loads variable " + name + " into $v0");
+        if (e.isLocalVariable(name))
+            e.emit("lw $v0 " + e.getOffset(name) + "($sp)\t# load local variable into $v0");
+        else
+            e.emit("lw $v0 var" + name + "\t# loads variable " + name + " into $v0");
+
         return e.getVariableType(name);
     }
 

@@ -1,0 +1,65 @@
+VAR min, max, guess, response: integer;
+
+PROCEDURE readmax();
+BEGIN
+    READLN(max);
+    IF max <= 0 THEN
+    BEGIN
+        WRITE('Please enter a valid maximum (>= 1): ');
+        readmax();
+    end;
+end;
+
+BEGIN
+	min := 0;
+	max := -1;
+
+	WRITE('Please enter an upper bound on integers: ');
+	readmax();
+
+	WRITELN('Now think of a number between 0 and ', max);
+	WRITELN('Press enter to continue:');
+	readln();
+
+	guess := -1;
+	response := -1;
+
+	WHILE min <= max DO
+	BEGIN
+		guess := (max + min + 1) / 2;
+
+		WRITELN('My guess is ', guess);
+		WRITE('Enter 0 (correct), 1 (too high), or 2 (too low): ');
+		READLN(response);
+
+		WHILE (response > 2) OR (response < 0) DO
+		BEGIN
+			WRITELN('Invalid response key.');
+			WRITE('Enter 0 (correct), 1 (too high), or 2 (too low): ');
+			READLN(response);
+		END;
+
+		IF response = 1 THEN
+		BEGIN
+			WRITELN('\nTime to try a little lower...');
+			max := guess - 1;
+		END;
+
+		IF response = 2 THEN
+		BEGIN
+			WRITELN('\nTime to try a little higher...');
+			min := guess + 1;
+		END;
+
+		IF min > max THEN
+			WRITELN('\nWait a minute, I sense cheating. I do not want to play with you anymore!');
+
+		IF response = 0 THEN
+		BEGIN
+			WRITELN('\nI got it right, yay!');
+			max := guess;
+			min := max + 1;
+		END;
+	END;
+END;
+.

@@ -13,6 +13,7 @@ public class Scanner
     private final BufferedReader in;
     private char currentChar;
     private boolean eof;
+    private boolean ignoreEOF; // used in strings and comments to ignore the EOF token (period)
 
     /**
      * This constructor uses an InputStream object for input to the reader.
@@ -23,6 +24,7 @@ public class Scanner
     {
         in = new BufferedReader(new InputStreamReader(inStream));
         eof = false;
+        ignoreEOF = false;
         getNextChar();
     }
 
@@ -50,7 +52,7 @@ public class Scanner
         {
             int read = in.read();
 
-            if (read == -1 || read == '.')
+            if (read == -1 || (!ignoreEOF && read == '.'))
                 eof = true;
             else
                 currentChar = (char) read;
@@ -214,6 +216,30 @@ public class Scanner
     }
 
     /**
+     * Scans a string as a Token. Called by the scanSeparator method
+     * when a single-quote is present. Ignores EOF and eats until another
+     * single-quote is reached.
+     * @return the string as a Token
+     */
+    private Token scanString()
+    {
+        ignoreEOF = true;
+        eat(currentChar);
+        StringBuilder operand = new StringBuilder();
+
+        while (currentChar != '\'')
+        {
+            operand.append(currentChar);
+            eat(currentChar);
+        }
+
+        ignoreEOF = false;
+        eat(currentChar); // eat the ending single quote
+
+        return new Token(operand.toString(), Token.Type.STRING);
+    }
+
+    /**
      * Scans currentChar as a separator. The method also handles multi-line comments.
      * @return the separator as a Token
      * @precondition currentChar must be a separator (see isSeparator for details)
@@ -221,29 +247,18 @@ public class Scanner
      */
     private Token scanSeparator()
     {
-        StringBuilder operand = new StringBuilder();
-        operand.append(currentChar);
-        eat(currentChar);
+        String separator = "" + currentChar;
 
-        if (operand.toString().equals("(") && currentChar == '*')
-            return scanMultiComment();
+        if (currentChar == '\'') return scanString();
 
-        if (operand.toString().equals("'"))
+        if (currentChar == '(') // check for multi line comments
         {
-            operand.deleteCharAt(0); // delete the starting single quote
-
-            while (currentChar != '\'')
-            {
-                operand.append(currentChar);
-                eat(currentChar);
-            }
-
-            eat(currentChar); // eat the ending single quote
-
-            return new Token(operand.toString(), Token.Type.STRING);
+            eat(currentChar);
+            if (currentChar == '*') return scanMultiComment();
         }
+        else eat(currentChar);
 
-        return new Token(operand.toString(), Token.Type.SEPARATOR);
+        return new Token(separator, Token.Type.SEPARATOR);
     }
 
     /**
@@ -254,9 +269,13 @@ public class Scanner
      */
     private Token scanSingleComment()
     {
+        ignoreEOF = true;
+
         do
             eat(currentChar);
         while (currentChar != '\n' && hasNext());
+
+        ignoreEOF = false;
 
         return nextToken();
     }
@@ -270,6 +289,7 @@ public class Scanner
      */
     private Token scanMultiComment()
     {
+        ignoreEOF = true;
         eat(currentChar); // eat the * in (*
         char lastChar;
 
@@ -279,6 +299,7 @@ public class Scanner
             eat(currentChar);
         } while (!(lastChar == '*' && currentChar == ')') && hasNext());
 
+        ignoreEOF = false;
         eat(currentChar); // eat the last / in *)
 
         return nextToken();

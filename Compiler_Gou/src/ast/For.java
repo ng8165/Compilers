@@ -3,6 +3,8 @@ package ast;
 import emitter.Emitter;
 import environment.Environment;
 
+import java.util.List;
+
 /**
  * The For class represents a for loop. For loops evaluate a start Expression and assign it
  * to a given variable. The variable is then incremented until it is greater than the end
@@ -83,39 +85,33 @@ public class For extends Statement
     @Override
     public void compile(Emitter e)
     {
-        int id = e.nextLabelID();
+        String id = "for" + e.nextLabelID();
+        e.pushLoopID(id);
+        /* e.setProcedureContext(new ProcedureDeclaration(null, null,
+                List.of(new VariableDeclaration(var, "integer")), null, null)); */
 
-        if (e.getVariableType(var) != Type.INTEGER)
-            throw new IllegalArgumentException(var + " must be an integer");
+        // assign starting value to var
+        new Assignment(var, start).compile(e);
 
-        // compile start and save into $v0
-        if (start.compile(e) != Type.INTEGER)
-            throw new IllegalArgumentException("incompatible type: " +
-                    start + " must be an integer");
+        // start of FOR loop
+        e.emit(id + ":");
 
-        e.emit("sw $v0 var" + var + "\t# compile FOR start into " + var);
-        e.emit("for" + id + ":");
-
-        // if start ($t0) > end ($v0), exit out of FOR
-        e.emit("lw $v0 var" + var);
-        e.emitPush("$v0");
-        if (end.compile(e) != Type.INTEGER)
-            throw new IllegalArgumentException("incompatible type: " +
-                    end + " must be an integer");
-
-        e.emitPop("$t0");
-        e.emit("bgt $t0 $v0 endfor" + id + "\t# jump to end if start > end");
+        // if var is greater than the ending value, jump to end of FOR loop
+        new Condition(new Variable(var), "<=", end).compile(e, "end" + id);
 
         // FOR Statement
         stmt.compile(e);
 
         // increment var
-        e.emit("lw $v0 var" + var + "\t# increment " + var);
-        e.emit("addu $v0 $v0 1");
-        e.emit("sw $v0 var" + var);
-        // jump to front of FOR
-        e.emit("j for" + id + "\t# continue looping");
+        e.emit("cont" + id + ":"); // where continue jumps to increment var
+        new Assignment(var, new BinOp("+", new Variable(var), new Number(1))).compile(e);
 
-        e.emit("endfor" + id + ":"); // end FOR
+        // jump to front of FOR
+        e.emit("j " + id + "\t# continue looping");
+
+        e.emit("end" + id + ":"); // end FOR
+
+        e.popLoopID();
+        // e.clearProcedureContext();
     }
 }

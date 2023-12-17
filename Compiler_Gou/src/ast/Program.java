@@ -66,7 +66,7 @@ public class Program
      */
     public void compile(String file)
     {
-        Emitter e = new Emitter(file, variables);
+        Emitter e = new Emitter(file, variables, procedures);
 
         // documentation
         String currDate = DateTimeFormatter.ofPattern("MM/dd/yyyy").format(LocalDate.now());
@@ -107,6 +107,9 @@ public class Program
                 \tli $v0 10\t# normal termination
                 \tsyscall
                 """, false);
+
+        for (ProcedureDeclaration procedure: procedures)
+            procedure.compile(e);
 
         // helper function for converting booleans to strings
         e.emit("""

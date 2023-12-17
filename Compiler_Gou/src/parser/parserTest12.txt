@@ -1,0 +1,10 @@
+VAR x: integer;
+
+PROCEDURE printSquare(n: integer);
+    WRITELN(n * n);
+
+BEGIN
+    x := 1;
+    printSquare(x + 2);
+END;
+.

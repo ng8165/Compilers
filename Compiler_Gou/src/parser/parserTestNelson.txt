@@ -1,0 +1,99 @@
+(*
+VAR UserChoice: string;
+VAR UserInput: integer;
+VAR answer: integer;
+VAR decimal: integer;
+
+PROCEDURE ShowTheMenu();
+BEGIN
+     WRITELN('\n     A Basic Program');
+     WRITELN('     ---------------');
+     WRITELN(' a) Celsius to Fahrenheit');
+     WRITELN(' b) Fahrenheit to Celsius');
+     WRITELN(' x) To exit the program\n');
+END;
+
+PROCEDURE GetUserChoice();
+BEGIN
+    WRITE('Enter your choice: ');
+    READLN(UserChoice);
+END;
+
+PROCEDURE GetNumberToConvert();
+BEGIN
+   WRITE('Enter number to convert: ');
+   READLN(UserInput);
+END;
+
+PROCEDURE Wait();
+BEGIN
+    WRITE('Press RETURN to continue: ');
+    READLN();
+END;
+
+FUNCTION ToFahrenheit(x: integer): integer;
+VAR FahrenheitRaw: integer;
+BEGIN
+    FahrenheitRaw := x * 10000 * 9 / 5 + 32 * 10000;
+    ToFahrenheit := FahrenheitRaw / 10000;
+    decimal := FahrenheitRaw MOD 10000 / 100;
+    IF decimal < 0 THEN decimal := -decimal;
+END;
+
+FUNCTION ToCelsius(x: integer): integer;
+VAR CelsiusRaw: integer;
+BEGIN
+    CelsiusRaw := (x - 32) * 10000 * 5 / 9;
+    ToCelsius := CelsiusRaw / 10000;
+    decimal := CelsiusRaw MOD 10000 / 100;
+    IF decimal < 0 THEN decimal := -decimal;
+END;
+
+PROCEDURE DoTheConversion();
+BEGIN
+     IF (UserChoice = 'a') THEN
+        answer := ToFahrenheit(UserInput);
+     IF (UserChoice = 'b') THEN
+        answer := ToCelsius(UserInput);
+END;
+
+PROCEDURE DisplayTheAnswer();
+BEGIN
+     WRITELN('\n        Degree');
+     IF (UserChoice = 'a') THEN
+        WRITELN('Celsius    | Fahrenheit');
+     IF (UserChoice = 'b') THEN
+        WRITELN('Fahrenheit |   Celsius');
+     WRITELN('------------------------');
+     WRITELN(UserInput + '   |   ' + answer + '.' + decimal + '\n');
+END;
+
+BEGIN
+    UserChoice := 'q';
+    WHILE (UserChoice <> 'x') DO
+    BEGIN
+        ShowTheMenu();
+        GetUserChoice();
+        IF (UserChoice = 'a') or (UserChoice = 'b') THEN
+        BEGIN
+            GetNumberToConvert();
+            DoTheConversion();
+            DisplayTheAnswer();
+            Wait();
+        END;
+    END;
+END;
+*)
+
+var i: integer;
+
+begin
+    for i := 1 to 10 do
+    begin
+        if i = 3 then continue;
+        if i = 8 then break;
+        writeln(i);
+    end;
+
+    writeln('end');
+end;

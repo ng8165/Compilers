@@ -96,8 +96,10 @@ public class BinOp extends Expression
                     {
                         e.emitPush("$v0");
                         e.emit("move $a0 $t0");
+                        e.emitPush("$ra");
                         if (t1 == Type.BOOLEAN) e.emit("jal boolToStr\t# convert bool to string");
                         else e.emit("jal intToStr\t# convert integer to string");
+                        e.emitPop("$ra");
                         e.emit("move $t0 $v0");
                         e.emitPop("$v0");
                     }
@@ -107,15 +109,19 @@ public class BinOp extends Expression
                     {
                         e.emitPush("$t0");
                         e.emit("move $a0 $v0");
+                        e.emitPush("$ra");
                         if (t2 == Type.BOOLEAN) e.emit("jal boolToStr\t# convert bool to string");
                         else e.emit("jal intToStr\t# convert integer to string");
+                        e.emitPop("$ra");
                         e.emitPop("$t0");
                     }
 
                     // concatenate strings
                     e.emit("move $a0 $t0");
                     e.emit("move $a1 $v0");
+                    e.emitPush("$ra");
                     e.emit("jal strcat");
+                    e.emitPop("$ra");
 
                     yield Type.STRING;
                 }

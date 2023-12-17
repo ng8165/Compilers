@@ -1,6 +1,5 @@
 package parser;
 
-import environment.Environment;
 import scanner.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,7 +20,7 @@ public class ParserTester
      */
     public static void main(String[] args) throws ScanErrorException, IOException
     {
-        String file = "parserTestMIPS.txt";
+        String file = "parserTestNelson.txt";
         Scanner sc = new Scanner(new FileInputStream("./src/parser/" + file));
         Parser ps = new Parser(sc);
         // Environment env = new Environment();

@@ -19,11 +19,8 @@ public class Parser
 {
     private final Scanner sc;
     private Token currentToken;
-
-    // varDecs and strings are Lists of all VariableDeclarations and string
-    // literals that are parsed. They are submitted to Program for compilation.
-    private List<VariableDeclaration> variableDeclarations;
-    private Map<String, Integer> strings;
+    private final List<VariableDeclaration> globalVars;
+    private final Map<String, Integer> strings;
 
     /**
      * This constructor takes a Scanner. It also loads the first token into currentToken and
@@ -34,7 +31,7 @@ public class Parser
     {
         this.sc = sc;
         currentToken = sc.nextToken();
-        variableDeclarations = new ArrayList<>();
+        globalVars = new ArrayList<>();
         strings = new HashMap<>();
     }
 
@@ -131,10 +128,10 @@ public class Parser
      * it to the varDecs instance variable List.
      * A valid VariableDeclaration includes the keyword "VAR", a comma separated
      * list of identifiers, a colon, and a type (integer, boolean, or string).
+     * @return the List of VariableDeclarations
      */
-    private void parseVariableDeclarations()
+    private List<VariableDeclaration> parseVariableDeclarations()
     {
-        eat("VAR", Token.Type.KEYWORD); // eat "VAR" keyword
         List<String> names = parseParams();
 
         String type = "integer";
@@ -144,10 +141,12 @@ public class Parser
             type = currentToken.getContent();
             eat(currentToken);
         }
-        eat(";", Token.Type.SEPARATOR);
 
+        List<VariableDeclaration> varDecs = new ArrayList<>();
         for (String name: names)
-            variableDeclarations.add(new VariableDeclaration(name, type));
+            varDecs.add(new VariableDeclaration(name, type));
+
+        return varDecs;
     }
 
     /**
@@ -160,11 +159,15 @@ public class Parser
     public Program parseProgram() throws ScanErrorException
     {
         while (currentToken.equals("VAR"))
-            parseVariableDeclarations();
+        {
+            eat("VAR", Token.Type.KEYWORD); // eat "VAR" keyword
+            globalVars.addAll(parseVariableDeclarations());
+            eat(";", Token.Type.SEPARATOR);
+        }
 
         List<ProcedureDeclaration> procedures = new ArrayList<>();
 
-        while (currentToken.equals("PROCEDURE"))
+        while (currentToken.equals("PROCEDURE") || currentToken.equals("FUNCTION"))
         {
             eat(currentToken); // eat "PROCEDURE" keyword
 
@@ -173,11 +176,37 @@ public class Parser
                 throw new ScanErrorException(id + " is not a valid identifier");
             eat(currentToken);
             eat("(", Token.Type.SEPARATOR);
-            List<String> params = parseParams();
+
+            List<VariableDeclaration> varDecs = new ArrayList<>();
+            while (!currentToken.equals(")"))
+            {
+                varDecs.addAll(parseVariableDeclarations());
+
+                if (currentToken.equals(","))
+                    eat(currentToken);
+            }
             eat(")", Token.Type.SEPARATOR);
+
+            String returnType = null;
+            if (currentToken.equals(":"))
+            {
+                eat(currentToken);
+                returnType = currentToken.getContent();
+                eat(currentToken);
+            }
+
             eat(";", Token.Type.SEPARATOR);
 
-            procedures.add(new ProcedureDeclaration(id, params, parseStatement()));
+            List<VariableDeclaration> localVars = new ArrayList<>();
+            while (currentToken.equals("VAR"))
+            {
+                eat("VAR", Token.Type.KEYWORD); // eat "VAR" keyword
+                localVars.addAll(parseVariableDeclarations());
+                eat(";", Token.Type.SEPARATOR);
+            }
+
+            procedures.add(new ProcedureDeclaration(id, varDecs, localVars,
+                    parseStatement(), returnType));
         }
 
         // parse Statement here so varDecs and strings are correct
@@ -188,7 +217,7 @@ public class Parser
         for (Map.Entry<String, Integer> e: strings.entrySet())
             stringList.set(e.getValue(), e.getKey());
 
-        return new Program(variableDeclarations, stringList, procedures, stmt);
+        return new Program(globalVars, stringList, procedures, stmt);
     }
 
     /**
@@ -216,15 +245,25 @@ public class Parser
             eat(";", Token.Type.SEPARATOR);
             return new Writeln(args);
         }
+        else if (currentToken.equals("WRITE"))
+        {
+            eat(currentToken); // eat "WRITE" token
+            List<Expression> args = parseArgs();
+            eat(";", Token.Type.SEPARATOR);
+            return new Writeln(args, false);
+        }
         else if (currentToken.equals("READLN"))
         {
             eat(currentToken); // eat "READLN" token
             eat("(", Token.Type.SEPARATOR);
 
             String var = currentToken.getContent();
-            if (currentToken.getType() != Token.Type.IDENTIFIER)
+            if (currentToken.equals(")"))
+                var = null; // support empty READLN
+            else if (currentToken.getType() != Token.Type.IDENTIFIER)
                 throw new ScanErrorException(var + " is not a valid identifier");
-            eat(currentToken);
+            else
+                eat(currentToken);
 
             eat(")", Token.Type.SEPARATOR);
             eat(";", Token.Type.SEPARATOR);
@@ -341,7 +380,17 @@ public class Parser
      */
     private Expression parseFactor() throws ScanErrorException
     {
-        if (currentToken.equals("("))
+        if (currentToken.getType() == Token.Type.STRING)
+        {
+            String str = currentToken.getContent();
+            eat(currentToken);
+
+            if (!strings.containsKey(str))
+                strings.put(str, strings.size());
+
+            return new Str(str, strings.get(str));
+        }
+        else if (currentToken.equals("("))
         {
             eat(currentToken);
             Expression exp = parseCondition();
@@ -367,16 +416,6 @@ public class Parser
         {
             eat(currentToken);
             return new UnOp("NOT", parseCondition());
-        }
-        else if (currentToken.getType() == Token.Type.STRING)
-        {
-            String str = currentToken.getContent();
-            eat(currentToken);
-
-            if (!strings.containsKey(str))
-                strings.put(str, strings.size());
-
-            return new Str(str, strings.get(str));
         }
         else if (currentToken.getType() == Token.Type.IDENTIFIER)
         {

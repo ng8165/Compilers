@@ -3,6 +3,8 @@ package ast;
 import emitter.Emitter;
 import environment.Environment;
 
+import java.util.EmptyStackException;
+
 /**
  * The Break class represents a BREAK statement in a loop.
  * @author Nelson Gou
@@ -20,5 +22,23 @@ public class Break extends Statement
     public void exec(Environment env)
     {
         throw new BreakException();
+    }
+
+    /**
+     * Compiles the Break Statement by finding the most recent loop ID and jumping
+     * to the end of the loop based on its ID. If no loop is found, an Exception is thrown.
+     * @param e the Emitter
+     */
+    @Override
+    public void compile(Emitter e)
+    {
+        try
+        {
+            e.emit("j end" + e.getLoopID());
+        }
+        catch (EmptyStackException err)
+        {
+            throw new IllegalArgumentException("cannot find loop to BREAK out of");
+        }
     }
 }

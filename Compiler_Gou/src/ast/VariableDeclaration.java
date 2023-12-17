@@ -13,6 +13,12 @@ public class VariableDeclaration extends Statement
     private final String name;
     private final Type type;
 
+    /**
+     * Instantiates a VariableDeclaration by setting a name and a type.
+     * Takes in the type as a String and matches it to a Type.
+     * @param name variable name
+     * @param type variable type, as String
+     */
     public VariableDeclaration(String name, String type)
     {
         this.name = name;
@@ -43,6 +49,10 @@ public class VariableDeclaration extends Statement
         return type;
     }
 
+    /**
+     * Executes the VariableDeclaration by setting it in the Environment.
+     * @param env the Environment
+     */
     @Override
     public void exec(Environment env)
     {

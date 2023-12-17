@@ -13,6 +13,7 @@ import java.util.List;
 public class Writeln extends Statement
 {
     private final List<Expression> exprs;
+    private final boolean newLine;
 
     /**
      * This constructor instantiates arguments (a List of Expressions).
@@ -21,6 +22,19 @@ public class Writeln extends Statement
     public Writeln(List<Expression> exprs)
     {
         this.exprs = exprs;
+        newLine = true;
+    }
+
+    /**
+     * This constructor instantiates arguments (a List of Expressions).
+     * Also takes in a boolean determining if a new line is necessary
+     * @param exprs the Expression within the WRITELN statement
+     * @param newLine true if a new line is needed; false if not
+     */
+    public Writeln(List<Expression> exprs, boolean newLine)
+    {
+        this.exprs = exprs;
+        this.newLine = newLine;
     }
 
     /**
@@ -73,7 +87,9 @@ public class Writeln extends Statement
                 }
                 case BOOLEAN -> {
                     e.emit("move $a0 $v0\t# convert boolean to string");
+                    e.emitPush("$ra");
                     e.emit("jal boolToStr");
+                    e.emitPop("$ra");
                     e.emit("move $a0 $v0\t# print boolean");
                     e.emit("li $v0 4");
                 }
@@ -82,8 +98,11 @@ public class Writeln extends Statement
             e.emit("syscall");
         }
 
-        e.emit("li $v0 4");
-        e.emit("la $a0 newline");
-        e.emit("syscall");
+        if (newLine)
+        {
+            e.emit("li $v0 4");
+            e.emit("la $a0 newline");
+            e.emit("syscall");
+        }
     }
 }

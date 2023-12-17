@@ -1,0 +1,11 @@
+VAR n: integer;
+
+PROCEDURE print(n: integer);
+    WRITELN(n);
+
+BEGIN
+    n := 3;
+    print(5);
+    WRITELN(n);
+END;
+.

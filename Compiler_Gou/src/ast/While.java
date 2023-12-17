@@ -71,11 +71,14 @@ public class While extends Statement
     public void compile(Emitter e)
     {
         int id = e.nextLabelID();
+        e.pushLoopID("while" + id);
+
         Condition c = (cond instanceof Condition) ?
                 (Condition) cond :
                 new Condition(cond, "=", new Bool(true));
 
         e.emit("while" + id + ":"); // WHILE start
+        e.emit("contwhile" + id + ":"); // where continue jumps to
 
         // if cond is FALSE, jump past WHILE
         c.compile(e, "endwhile" + id);
@@ -85,5 +88,7 @@ public class While extends Statement
         e.emit("j while" + id + "\t# continue looping");
 
         e.emit("endwhile" + id + ":"); // after WHILE
+
+        e.popLoopID();
     }
 }

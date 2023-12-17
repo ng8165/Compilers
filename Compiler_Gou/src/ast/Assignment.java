@@ -52,10 +52,16 @@ public class Assignment extends Statement
     {
         Type type = exp.compile(e);
 
+        if (var == null) // when ProcedureCall is used as a Statement
+            return;
+
         if (type != e.getVariableType(var))
             throw new IllegalArgumentException("Incompatible types: cannot perform assignment in "
                     + var + " := " + exp);
 
-        e.emit("sw $v0 var" + var + "\t# load var" + var + " into accumulator");
+        if (e.isLocalVariable(var))
+            e.emit("sw $v0 " + e.getOffset(var) + "($sp)\t# save $v0 into local variable");
+        else
+            e.emit("sw $v0 var" + var + "\t# load accumulator into " + var);
     }
 }

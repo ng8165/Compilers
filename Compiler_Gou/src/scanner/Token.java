@@ -75,9 +75,9 @@ public class Token
     public Token(String content, Type type)
     {
         this.content = content;
-        if (KEYWORDS.contains(content.toUpperCase())) // case insensitive
+        if (type != Type.STRING && KEYWORDS.contains(content.toUpperCase())) // case insensitive
             this.type = Type.KEYWORD;
-        else if (RELOPS.contains(content))
+        else if (type != Type.STRING && RELOPS.contains(content))
             this.type = Type.RELOPS;
         else
             this.type = type;

@@ -44,18 +44,32 @@ public class Readln extends Statement
     @Override
     public void compile(Emitter e)
     {
+        if (var == null) // for empty READLN, read string and discard
+        {
+            e.emit("li $v0 8\t# read string from user input");
+            e.emit("la $a0 readBuffer");
+            e.emit("li $a1 128\t# max length of inputted string");
+            e.emit("syscall");
+            return;
+        }
+
         switch (e.getVariableType(var))
         {
             case INTEGER -> {
                 e.emit("li $v0 5\t# get user integer input and store in " + var);
                 e.emit("syscall");
-                e.emit("sw $v0 var" + var);
             }
             case STRING -> {
+                e.emitPush("$ra");
                 e.emit("jal readstr\t# get user string input in $v0");
-                e.emit("sw $v0 var" + var + "\t# store in " + var);
+                e.emitPop("$ra");
             }
-            default -> throw new IllegalArgumentException(var + " must be an integer");
+            default -> throw new IllegalArgumentException("READLN only takes integers and strings");
         }
+
+        if (e.isLocalVariable(var))
+            e.emit("sw $v0 " + e.getOffset(var) + "($sp)\t# save $v0 into local variable");
+        else
+            e.emit("sw $v0 var" + var + "\t# load accumulator into " + var);
     }
 }

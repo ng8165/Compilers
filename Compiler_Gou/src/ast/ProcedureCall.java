@@ -1,5 +1,6 @@
 package ast;
 
+import emitter.Emitter;
 import environment.Environment;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class ProcedureCall extends Expression
     public Object eval(Environment env) throws IllegalArgumentException
     {
         ProcedureDeclaration procedure = env.getProcedure(id);
-        List<String> params = procedure.getParams();
+        List<VariableDeclaration> params = procedure.getParams();
         Environment childEnv = new Environment(env);
         childEnv.declareVariable(id, 0); // default return value
 
@@ -46,11 +47,57 @@ public class ProcedureCall extends Expression
             throw new IllegalArgumentException("Number of args does not match number of params");
 
         for (int i=0; i<args.size(); i++)
-            childEnv.declareVariable(params.get(i), args.get(i).eval(env));
+            childEnv.declareVariable(params.get(i).getName(), args.get(i).eval(env));
 
         procedure.getStatement().exec(childEnv);
 
         return childEnv.getVariable(id);
+    }
+
+    /**
+     * Compiles the ProcedureCall. Stores $ra and all arguments onto the stack.
+     * Jumps to the procedure. Then pops all arguments and sets $ra back.
+     * @param e the Emitter
+     * @return the return value of the Procedure
+     */
+    @Override
+    public Type compile(Emitter e)
+    {
+        ProcedureDeclaration procedure = e.getProcedureDeclaration(id);
+        int localVarSize = procedure.getLocalVars().size();
+
+        // push $ra onto stack
+        e.emitPush("$ra");
+
+        // push arguments onto stack
+        for (Expression arg: args)
+        {
+            arg.compile(e);
+            e.emitPush("$v0");
+        }
+
+        e.emitPush("$zero"); // push return value even if it's not there
+
+        // push local variables onto stack (0 is default value)
+        for (int i=0; i<localVarSize; i++)
+            e.emitPush("$zero");
+
+        e.emit("jal proc" + id);
+
+        // pop all local vars from stack
+        for (int i=0; i<localVarSize; i++)
+            e.emitPop("$t0");
+
+        e.emitPop("$v0"); // load return value in $v0 even if it's not there
+
+        // pop arguments from stack
+        for (Expression ignored: args)
+            e.emitPop("$t0");
+
+        // load $ra from stack
+        e.emitPop("$ra");
+
+        return e.getProcedureDeclaration(id).getReturnType();
     }
 
     /**

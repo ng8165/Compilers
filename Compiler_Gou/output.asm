@@ -1,83 +1,66 @@
 # OUTPUT.ASM
 # This is automatically generated code. Do not modify.
 # @author Nelson Gou
-# @version 11/30/2023
+# @version 12/17/2023
 
 	.data
 newline: .asciiz "\n"
 true: .asciiz "TRUE"
 false: .asciiz "FALSE"
 readBuffer: .space 129
-str0: .asciiz "mips is the best thing to ever exist; it is "
-str1: .asciiz "/"
-str2: .asciiz ", and that statement is "
-varstr: .word 0
-varnum: .word 0
+str0: .asciiz "end"
+vari: .word 0
 
 	.text
 	.globl main
 main:
+	li $v0 1	# load integer 1 into accumulator
+	sw $v0 vari	# load accumulator into i
+for0:
+	lw $v0 vari	# loads variable i into $v0
+	subu $sp $sp 4	# push $v0 into stack
+	sw $v0 ($sp)
+	li $v0 10	# load integer 10 into accumulator
+	lw $t0 ($sp)	# pop stack into $t0
+	addu $sp $sp 4
+	bgt $t0 $v0 endfor0	# jump to endfor0 if condition is not satisfied
+	lw $v0 vari	# loads variable i into $v0
+	subu $sp $sp 4	# push $v0 into stack
+	sw $v0 ($sp)
+	li $v0 3	# load integer 3 into accumulator
+	lw $t0 ($sp)	# pop stack into $t0
+	addu $sp $sp 4
+	bne $t0 $v0 endif1	# jump to endif1 if condition is not satisfied
+	j contfor0
+endif1:
+	lw $v0 vari	# loads variable i into $v0
+	subu $sp $sp 4	# push $v0 into stack
+	sw $v0 ($sp)
+	li $v0 8	# load integer 8 into accumulator
+	lw $t0 ($sp)	# pop stack into $t0
+	addu $sp $sp 4
+	bne $t0 $v0 endif2	# jump to endif2 if condition is not satisfied
+	j endfor0
+endif2:
+	lw $v0 vari	# loads variable i into $v0
+	move $a0 $v0	# print integer
+	li $v0 1
+	syscall
+	li $v0 4
+	la $a0 newline
+	syscall
+contfor0:
+	lw $v0 vari	# loads variable i into $v0
+	subu $sp $sp 4	# push $v0 into stack
+	sw $v0 ($sp)
+	li $v0 1	# load integer 1 into accumulator
+	lw $t0 ($sp)	# pop stack into $t0
+	addu $sp $sp 4
+	addu $v0 $t0 $v0	# add $t0 and $v0
+	sw $v0 vari	# load accumulator into i
+	j for0	# continue looping
+endfor0:
 	la $v0 str0	# load string into accumulator
-	subu $sp $sp 4	# push $v0 into stack
-	sw $v0 ($sp)
-	li $v0 10	# load integer 10 into accumulator
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	subu $sp $sp 4	# push $t0 into stack
-	sw $t0 ($sp)
-	move $a0 $v0
-	jal intToStr	# convert integer to string
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	move $a0 $t0
-	move $a1 $v0
-	jal strcat
-	subu $sp $sp 4	# push $v0 into stack
-	sw $v0 ($sp)
-	la $v0 str1	# load string into accumulator
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	move $a0 $t0
-	move $a1 $v0
-	jal strcat
-	subu $sp $sp 4	# push $v0 into stack
-	sw $v0 ($sp)
-	li $v0 10	# load integer 10 into accumulator
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	subu $sp $sp 4	# push $t0 into stack
-	sw $t0 ($sp)
-	move $a0 $v0
-	jal intToStr	# convert integer to string
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	move $a0 $t0
-	move $a1 $v0
-	jal strcat
-	subu $sp $sp 4	# push $v0 into stack
-	sw $v0 ($sp)
-	la $v0 str2	# load string into accumulator
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	move $a0 $t0
-	move $a1 $v0
-	jal strcat
-	subu $sp $sp 4	# push $v0 into stack
-	sw $v0 ($sp)
-	li $v0 -1	# load TRUE into accumulator
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	subu $sp $sp 4	# push $t0 into stack
-	sw $t0 ($sp)
-	move $a0 $v0
-	jal boolToStr	# convert bool to string
-	lw $t0 ($sp)	# pop stack into $t0
-	addu $sp $sp 4
-	move $a0 $t0
-	move $a1 $v0
-	jal strcat
-	sw $v0 varstr	# load varstr into accumulator
-	lw $v0 varstr	# loads variable str into $v0
 	move $a0 $v0	# print string
 	li $v0 4
 	syscall

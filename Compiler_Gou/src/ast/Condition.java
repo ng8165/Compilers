@@ -83,7 +83,9 @@ public class Condition extends Expression
                     {
                         e.emit("move $a0 $t0");
                         e.emit("move $a1 $v0");
+                        e.emitPush("$ra");
                         e.emit("jal strcmp");
+                        e.emitPop("$ra");
                         return Type.BOOLEAN;
                     }
 
@@ -92,7 +94,11 @@ public class Condition extends Expression
                 case "<>" -> {
                     if (t1 == Type.STRING && t2 == Type.STRING)
                     {
+                        e.emit("move $a0 $t0");
+                        e.emit("move $a1 $v0");
+                        e.emitPush("$ra");
                         e.emit("jal strcmp");
+                        e.emitPop("$ra");
                         e.emit("not $v0 $v0");
                         return Type.BOOLEAN;
                     }
@@ -153,8 +159,32 @@ public class Condition extends Expression
         try
         {
             switch (relop) {
-                case "=" -> e.emit("bne $t0 $v0 " + targetLabel + comment);
-                case "<>" -> e.emit("beq $t0 $v0 " + targetLabel + comment);
+                case "=" -> {
+                    if (t1 == Type.STRING && t2 == Type.STRING)
+                    {
+                        e.emit("move $a0 $t0");
+                        e.emit("move $a1 $v0");
+                        e.emitPush("$ra");
+                        e.emit("jal strcmp");
+                        e.emitPop("$ra");
+                        e.emit("beqz $v0 " + targetLabel + comment);
+                    }
+                    else
+                        e.emit("bne $t0 $v0 " + targetLabel + comment);
+                }
+                case "<>" -> {
+                    if (t1 == Type.STRING && t2 == Type.STRING)
+                    {
+                        e.emit("move $a0 $t0");
+                        e.emit("move $a1 $v0");
+                        e.emitPush("$ra");
+                        e.emit("jal strcmp");
+                        e.emitPop("$ra");
+                        e.emit("bnez $v0 " + targetLabel + comment);
+                    }
+                    else
+                        e.emit("beq $t0 $v0 " + targetLabel + comment);
+                }
                 case "<" -> {
                     if (t1 != Type.INTEGER || t2 != Type.INTEGER) throw new RuntimeException();
                     e.emit("bge $t0 $v0 " + targetLabel + comment);
