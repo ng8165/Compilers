@@ -40,6 +40,7 @@ public class ProcedureCall extends Expression
     {
         ProcedureDeclaration procedure = env.getProcedure(id);
         List<VariableDeclaration> params = procedure.getParams();
+        List<VariableDeclaration> localVars = procedure.getLocalVars();
         Environment childEnv = new Environment(env);
         childEnv.declareVariable(id, 0); // default return value
 
@@ -48,6 +49,9 @@ public class ProcedureCall extends Expression
 
         for (int i=0; i<args.size(); i++)
             childEnv.declareVariable(params.get(i).getName(), args.get(i).eval(env));
+
+        for (VariableDeclaration var: localVars)
+            childEnv.declareVariable(var.getName(), 0);
 
         procedure.getStatement().exec(childEnv);
 

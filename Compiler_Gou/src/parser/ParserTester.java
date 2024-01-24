@@ -1,6 +1,7 @@
 package parser;
 
 import scanner.*;
+import environment.Environment;
 import java.io.FileInputStream;
 import java.io.IOException;
 

@@ -64,7 +64,11 @@ public class Readln extends Statement
                 e.emit("jal readstr\t# get user string input in $v0");
                 e.emitPop("$ra");
             }
-            default -> throw new IllegalArgumentException("READLN only takes integers and strings");
+            case BOOLEAN -> {
+                e.emitPush("$ra");
+                e.emit("jal readbool\t# read string and check user input");
+                e.emitPop("$ra");
+            }
         }
 
         if (e.isLocalVariable(var))

@@ -211,6 +211,28 @@ public class Program
                 \tjr $s3\t# $s3 contains $ra""", false);
 
         e.emit("""
+                readbool:
+                \tsubu $sp $sp 4\t# push $ra onto stack
+                \tsw $ra ($sp)
+                \tjal readstr\t# read string and save in $s0
+                \tmove $s0 $v0
+                \tmove $a0 $s0
+                \tla $a1 true
+                \tjal strcmp\t# compare string input and TRUE
+                \tbeq $v0 -1 readboolend
+                \tmove $a0 $s0
+                \tla $a1 false
+                \tjal strcmp\t# compare string input and FALSE
+                \tbeq $v0 -1 readboolfalse
+                \tbreak\t# throw error if string is neither TRUE nor FALSE
+                readboolfalse:
+                \tli $v0 0
+                readboolend:
+                \tlw $ra ($sp)\t# load $ra from stack
+                \taddu $sp $sp 4
+                \tjr $ra""", false);
+
+        e.emit("""
                 intToStr:
                 \tmove $s0 $a0\t# set $s0 to the number
                 \tabs $v0 $s0\t# let $v0 be absolute value of number
